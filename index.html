@@ -18,7 +18,7 @@
       margin: 0 auto;
       position: relative;
     }
-
+    
     .hero::after {
       content: '';
       position: fixed;
@@ -299,7 +299,28 @@
       letter-spacing: 0.05em;
       color: var(--muted);
     }
+    /* General link style */
+a {
+    color: #00d4ff; /* A bright cyan that pops on dark backgrounds */
+    text-decoration: none; /* Removes default underline if desired */
+    transition: color 0.3s ease; /* Smooth color transition */
+}
 
+/* Visited links - prevent them from turning dark purple */
+a:visited {
+    color: #a29bfe; /* A lighter lavender that remains visible */
+}
+
+/* Hover state - makes the link feel interactive */
+a:hover {
+    color: #ffffff; /* Turns white when hovered */
+    text-decoration: underline; /* Adds underline back on hover */
+}
+
+/* Active state - when the link is being clicked */
+a:active {
+    color: #ff7675; /* A soft red/pink alert color */
+}
     @media (max-width: 860px) {
       .hero { grid-template-columns: 1fr; padding: 7rem 1.5rem 4rem; }
       .hero-visual { align-items: flex-start; }
@@ -376,11 +397,11 @@
     <div class="news-list">
         <div class="news-item">
         <span class="news-date">2026</span>
-        <span class="news-text"><span class="news-new">New</span> TAPAS: Efficient Two-Server Asymmetric Private Aggregation Beyond Prio(+) accepted at <strong><a href="https://www.multipartycomputation.com/tpmpc-2026">Theory and Practice of Multi-party Computation (TPMPC) 2026</a></strong></span>
+        <span class="news-text"><span class="news-new">New</span> <strong>TAPAS: Efficient Two-Server Asymmetric Private Aggregation Beyond Prio(+) </strong> accepted at <a href="https://www.multipartycomputation.com/tpmpc-2026">Theory and Practice of Multi-party Computation (TPMPC) 2026</a></span>
       </div>
         <div class="news-item">
         <span class="news-date">2026</span>
-        <span class="news-text"><span class="news-new">New</span> Invited to give a talk on Secure Aggregation and Federated Learning at <strong><a href="https://flower.ai/events/flower-ai-summit-2026">Flower AI Summit</a></strong>, London, 2026</strong>.</span>
+        <span class="news-text"><span class="news-new">New</span> Invited to give a talk on <strong>Secure Aggregation and Federated Learning </strong> at <a href="https://flower.ai/events/flower-ai-summit-2026">Flower AI Summit</a></strong>, London, 2026.</span>
       </div>
         <div class="news-item">
         <span class="news-date">2026</span>
