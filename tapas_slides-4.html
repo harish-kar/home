@@ -1,0 +1,1558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TAPAS — JPMorgan AI Research</title>
+
+<script>
+window.MathJax = {
+    tex: { inlineMath: [['\\(','\\)']], displayMath: [['\\[','\\]']], processEscapes: true },
+    options: { enableMenu: false }
+};
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&family=Sora:wght@700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<style>
+/* ─── TOKENS ──────────────────────────────────────────────────────────────── */
+:root {
+    --bg:        #06070d;
+    --surface:   #0c0e1a;
+    --surface2:  #111525;
+    --border:    #1c2038;
+    --border2:   #252a45;
+    --violet:    #7c6ff7;
+    --violet-lo: rgba(124,111,247,.08);
+    --green:     #1cd6a0;
+    --green-lo:  rgba(28,214,160,.08);
+    --red:       #f0566a;
+    --amber:     #f5a524;
+    --cyan:      #22d3ee;
+    --text:      #e8eaf4;
+    --muted:     #6b7394;
+    --muted2:    #9098ba;
+    --dim:       rgba(232,234,244,.06);
+}
+
+/* ─── RESET ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+mjx-container { margin: 0 !important; }
+
+body {
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+}
+
+/* ─── STAGE ───────────────────────────────────────────────────────────────── */
+#stage {
+    position: relative;
+    width: 1280px;
+    height: 720px;
+    background: var(--bg);
+    overflow: hidden;
+    /* Subtle grid texture */
+    background-image:
+        linear-gradient(var(--dim) 1px, transparent 1px),
+        linear-gradient(90deg, var(--dim) 1px, transparent 1px);
+    background-size: 48px 48px;
+}
+
+/* Radial glow — top right */
+#stage::before {
+    content: '';
+    position: absolute;
+    top: -180px; right: -120px;
+    width: 560px; height: 560px;
+    background: radial-gradient(circle, rgba(124,111,247,.18) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+/* Bottom-left green hint */
+#stage::after {
+    content: '';
+    position: absolute;
+    bottom: -100px; left: -80px;
+    width: 360px; height: 360px;
+    background: radial-gradient(circle, rgba(28,214,160,.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ─── SLIDE ───────────────────────────────────────────────────────────────── */
+.slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+    flex-direction: column;
+    padding: 48px 64px 44px;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity .35s ease;
+}
+.slide.active { display: flex; opacity: 1; }
+
+/* ─── CHROME ──────────────────────────────────────────────────────────────── */
+/* JPMC logo */
+#logo {
+    position: absolute;
+    top: 22px; right: 28px;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#logo img {
+    height: 22px;
+    filter: brightness(0) invert(1);
+    opacity: .55;
+}
+
+/* Slide counter */
+#counter {
+    position: absolute;
+    bottom: 22px; left: 32px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+    letter-spacing: .08em;
+    z-index: 200;
+}
+
+/* Progress bar */
+#progress {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--violet), var(--green));
+    transition: width .3s ease;
+    z-index: 200;
+}
+
+/* Nav buttons */
+#nav {
+    position: absolute;
+    bottom: 16px; right: 24px;
+    z-index: 200;
+    display: flex;
+    gap: 6px;
+}
+.btn {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--muted2);
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s, border-color .15s;
+}
+.btn:hover { background: var(--violet); border-color: var(--violet); color: #fff; }
+
+/* ─── TYPOGRAPHY SYSTEM ──────────────────────────────────────────────────── */
+.slide-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--violet);
+    opacity: .7;
+    margin-bottom: 6px;
+}
+.slide-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 38px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+    margin-bottom: 32px;
+    letter-spacing: -.02em;
+    margin-bottom: 24px;
+}
+.slide-title span { color: var(--violet); }
+
+/* ─── LAYOUT HELPERS ─────────────────────────────────────────────────────── */
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.cols-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.content { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
+/* ─── CARD ───────────────────────────────────────────────────────────────── */
+.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 26px;
+    position: relative;
+}
+.card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 14px;
+    border-top: 2px solid var(--violet);
+    pointer-events: none;
+}
+.card.green::before  { border-top-color: var(--green); }
+.card.red::before    { border-top-color: var(--red); }
+.card.amber::before  { border-top-color: var(--amber); }
+.card.cyan::before   { border-top-color: var(--cyan); }
+
+.card-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--violet);
+    margin-bottom: 10px;
+}
+.card-label.green { color: var(--green); }
+.card-label.red   { color: var(--red); }
+.card-label.amber { color: var(--amber); }
+.card-label.cyan  { color: var(--cyan); }
+
+.card h3 {
+    font-family: 'Sora', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+.card p, .card li {
+    font-size: 16px;
+    line-height: 1.6;
+    color: var(--muted2);
+}
+.card ul { padding-left: 16px; }
+.card li { margin-top: 5px; }
+strong { color: var(--text); font-weight: 600; }
+
+/* ─── MATH BOX ───────────────────────────────────────────────────────────── */
+.eq {
+    font-family: 'DM Mono', monospace;
+    background: rgba(0,0,0,.5);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 16px;
+    color: var(--green);
+    margin: 12px 0;
+    line-height: 1.6;
+}
+
+/* ─── BADGE / STAT ───────────────────────────────────────────────────────── */
+.stat { display: flex; flex-direction: column; align-items: center; }
+.stat-num {
+    font-family: 'Sora', sans-serif;
+    font-size: 52px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--violet), var(--green));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    line-height: 1;
+}
+.stat-label { font-size: 14px; color: var(--muted); margin-top: 4px; letter-spacing: .04em; }
+
+/* ─── ACTOR BOX ──────────────────────────────────────────────────────────── */
+.actor-box {
+    border-radius: 10px;
+    padding: 12px 18px;
+    border: 1px solid var(--border2);
+    background: var(--surface2);
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--muted2);
+    z-index: 5;
+}
+.actor-box.violet { border-color: var(--violet); color: var(--violet); background: var(--violet-lo); }
+.actor-box.green  { border-color: var(--green);  color: var(--green);  background: var(--green-lo); }
+.actor-box.cyan   { border-color: var(--cyan);   color: var(--cyan);   background: rgba(34,211,238,.07); }
+.actor-box small  { display: block; font-weight: 400; font-size: 14px; color: var(--muted); margin-top: 3px; text-transform: none; letter-spacing: 0; }
+
+/* ─── PILL ───────────────────────────────────────────────────────────────── */
+.pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px;
+    font-size: 14px; font-weight: 600;
+    background: var(--violet-lo); color: var(--violet);
+    border: 1px solid rgba(124,111,247,.25);
+}
+.pill.green { background: var(--green-lo); color: var(--green); border-color: rgba(28,214,160,.25); }
+.pill.amber { background: rgba(245,165,36,.08); color: var(--amber); border-color: rgba(245,165,36,.25); }
+.pill.red   { background: rgba(240,86,106,.08); color: var(--red);   border-color: rgba(240,86,106,.25); }
+
+/* ─── DIVIDER ────────────────────────────────────────────────────────────── */
+.rule {
+    height: 1px;
+    background: var(--border);
+    margin: 18px 0;
+}
+
+/* ─── TABLE ──────────────────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    font-family: 'DM Mono', monospace;
+}
+.data-table th {
+    background: var(--surface2);
+    color: var(--muted);
+    font-size: 14px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 10px 13px;
+    border-bottom: 1px solid var(--border2);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    text-align: center;
+}
+.data-table th:first-child { text-align: left; }
+.data-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted2);
+    text-align: center;
+}
+.data-table td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-size: 12.5px; }
+.data-table tr:nth-child(even) td { background: rgba(255,255,255,.015); }
+.data-table tr.tapas-row td {
+    color: var(--violet);
+    font-weight: 600;
+    background: rgba(124,111,247,.06);
+}
+.data-table tr.tapas-row td:first-child { color: var(--text); }
+.tick { color: var(--green); font-size: 14px; }
+.cross { color: var(--border2); font-size: 14px; }
+
+/* ─── BAR CHART ──────────────────────────────────────────────────────────── */
+.bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 9px;
+}
+.bar-lbl { width: 170px; text-align: right; font-size: 14px; color: var(--muted2); flex-shrink: 0; }
+.bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--surface2);
+    border-radius: 5px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+.bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: flex-end;
+    padding-right: 10px;
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+    font-weight: 500;
+    color: rgba(255,255,255,.9);
+}
+
+/* ─── ANIMATION ARENA ────────────────────────────────────────────────────── */
+.arena {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    position: relative;
+    overflow: hidden;
+}
+.arena-phase {
+    position: absolute;
+    top: 14px; right: 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--violet);
+    opacity: .8;
+    letter-spacing: .06em;
+}
+
+/* Floating packet labels */
+.pkt {
+    position: absolute;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    opacity: 0;
+    white-space: nowrap;
+    z-index: 20;
+    box-shadow: 0 4px 20px rgba(0,0,0,.6);
+}
+
+/* ─── STEP BADGE ─────────────────────────────────────────────────────────── */
+.step-badge {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ─── HIGHLIGHT STRIP ────────────────────────────────────────────────────── */
+.hl-strip {
+    background: linear-gradient(135deg, rgba(124,111,247,.12), rgba(28,214,160,.06));
+    border: 1px solid rgba(124,111,247,.2);
+    border-radius: 10px;
+    padding: 14px 20px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* SLIDE 1 — TITLE                                                          */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#s1 { padding: 0; }
+#s1 .left-band {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--violet), var(--green));
+}
+#s1 .title-block {
+    position: absolute;
+    left: 72px; top: 50%;
+    transform: translateY(-50%);
+    max-width: 820px;
+}
+#s1 .kicker {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--violet);
+    opacity: .7;
+    margin-bottom: 20px;
+}
+#s1 h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: 60px;
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -.04em;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+#s1 h1 em { color: var(--green); font-style: normal; }
+#s1 .subtitle {
+    font-size: 18px;
+    color: var(--muted2);
+    font-weight: 300;
+    margin-bottom: 36px;
+    line-height: 1.5;
+}
+#s1 .authors {
+    font-size: 15px;
+    color: var(--muted2);
+    margin-bottom: 40px;
+}
+#s1 .authors strong { color: var(--text); font-weight: 500; }
+#s1 .badges { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* SLIDE 3 — CORE PROTOCOL (bb animation)                                  */
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* Asymmetric arrow animation */
+#bb-y  { top: 98px;  left: 200px; background: var(--green);  color: #000; animation: bbY 10s infinite; }
+#bb-s  { top: 138px; left: 200px; background: var(--violet); color: #fff; animation: bbS 10s infinite; }
+#bb-sum{ top: 118px; left: 540px; background: var(--amber);  color: #000; animation: bbSum 10s infinite; animation-delay: 5s; }
+
+@keyframes bbY {
+    0%   { left: 200px; opacity: 0; }
+    8%   { opacity: 1; }
+    42%  { left: 860px; opacity: 1; }
+    48%  { opacity: 0; }
+    100% { left: 860px; opacity: 0; }
+}
+@keyframes bbS {
+    0%   { left: 200px; opacity: 0; }
+    8%   { opacity: 1; }
+    42%  { left: 540px; opacity: 1; }
+    48%  { opacity: 0; }
+    100% { left: 540px; opacity: 0; }
+}
+@keyframes bbSum {
+    0%   { left: 540px; opacity: 0; }
+    10%  { opacity: 1; }
+    35%  { left: 860px; opacity: 1; }
+    45%  { opacity: 0; }
+    100% { left: 860px; opacity: 0; }
+}
+#bb-phase::after {
+    animation: bbPhase 10s infinite;
+    color: var(--violet);
+}
+@keyframes bbPhase {
+    0%,49%   { content: "Phase 1 — Asymmetric Upload"; }
+    50%,74%  { content: "Phase 2 — S2 Summation"; }
+    75%,100% { content: "Phase 3 — Transfer & Decrypt"; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* SLIDE 7 — SIGMA PROTOCOL                                                */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#pkt-t { top: 88px;  left: 270px; background: var(--green);  color: #000; animation: flowT 12s infinite; }
+#pkt-c { top: 158px; right: 270px; background: var(--amber); color: #000; animation: flowC 12s infinite; animation-delay: 4s; }
+#pkt-z { top: 228px; left: 270px; background: var(--violet); color: #fff; animation: flowZ 12s infinite; animation-delay: 8s; }
+
+@keyframes flowT {
+    0%   { left: 270px; opacity: 0; }
+    5%   { opacity: 1; }
+    28%  { left: 770px; opacity: 1; }
+    33%  { opacity: 0; }
+    100% { left: 770px; opacity: 0; }
+}
+@keyframes flowC {
+    0%   { right: 270px; opacity: 0; }
+    5%   { opacity: 1; }
+    28%  { right: 770px; opacity: 1; }
+    33%  { opacity: 0; }
+    100% { right: 770px; opacity: 0; }
+}
+@keyframes flowZ {
+    0%   { left: 270px; opacity: 0; }
+    5%   { opacity: 1; }
+    28%  { left: 770px; opacity: 1; }
+    33%  { opacity: 0; }
+    100% { left: 770px; opacity: 0; }
+}
+#sigma-phase::after {
+    animation: sigPhase 12s infinite;
+    color: var(--violet);
+    font-weight: 600;
+}
+@keyframes sigPhase {
+    0%,32%   { content: "Phase 1 — Sample & Commit"; }
+    33%,65%  { content: "Phase 2 — Verifier Challenge"; }
+    66%,100% { content: "Phase 3 — Response & Verify"; }
+}
+.prover-txt::after  { animation: proverTxt 12s infinite; }
+@keyframes proverTxt {
+    0%,32%   { content: "Sample r_s, r_e, r_x"; color: var(--green); }
+    33%,65%  { content: "Awaiting challenge c…"; color: var(--muted); }
+    66%,100% { content: "z_w = r_w + c·w"; color: var(--violet); }
+}
+.verifier-txt::after { animation: verTxt 12s infinite; }
+@keyframes verTxt {
+    0%,32%   { content: "Awaiting commit t…"; color: var(--muted); }
+    33%,65%  { content: "Sample c ∈ {−1,0,1}"; color: var(--amber); }
+    66%,100% { content: "Verify A z_s + z_e + Δz_x"; color: var(--green); }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* SLIDE 9 — DIGEST CHECK                                                   */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#dp1 { top: 100px; left: 150px; background: var(--violet); color: #fff; animation: dFlow1 12s infinite; }
+#dp2 { top: 155px; left: 150px; background: var(--cyan);   color: #000; animation: dFlow2 12s infinite; animation-delay: 3s; }
+#dp3 { top: 127px; left: 490px; background: var(--amber);  color: #000; animation: dFlow3 12s infinite; animation-delay: 7s; }
+.d-ok { position: absolute; right: 100px; top: 90px; font-size: 22px; color: var(--green); font-weight: 700; opacity: 0; animation: dOk 12s infinite; animation-delay: 10.5s; }
+@keyframes dFlow1 { 0%{left:150px;opacity:0} 8%{opacity:1} 30%{left:490px;opacity:1} 35%{opacity:0} 100%{opacity:0} }
+@keyframes dFlow2 { 0%{left:150px;opacity:0} 8%{opacity:1} 30%{left:830px;opacity:1} 55%{opacity:1} 60%{opacity:0} 100%{opacity:0} }
+@keyframes dFlow3 { 0%{left:490px;opacity:0} 8%{opacity:1} 25%{left:830px;opacity:1} 40%{opacity:1} 48%{opacity:0} 100%{opacity:0} }
+@keyframes dOk    { 0%{opacity:0;transform:scale(.8)} 10%,20%{opacity:1;transform:scale(1)} 30%{opacity:0} }
+#dig-phase::after { animation: digPhase 12s infinite; color: var(--violet); }
+@keyframes digPhase {
+    0%,24%  { content: "Phase 1 — Secret Commitment"; }
+    25%,54% { content: "Phase 2 — Block ZK Responses"; }
+    55%,84% { content: "Phase 3 — S2 Digest"; }
+    85%,100%{ content: "Phase 4 — Global Verification ✓"; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════ */
+/* SLIDE 11 — IDENTIFIABLE ABORT                                            */
+/* ══════════════════════════════════════════════════════════════════════════ */
+#ia-pkt-sig   { background: var(--amber);  color: #000; top: 54px;  animation: iaDown 12s infinite; }
+#ia-pkt-set   { background: var(--violet); color: #fff; top: 180px; left: 90px; animation: iaRight 12s infinite; animation-delay: 4s; }
+#ia-pkt-proof { background: var(--red);    color: #fff; top: 270px; right: 90px; animation: iaLeft  12s infinite; animation-delay: 8s; }
+
+@keyframes iaDown  { 0%{top:40px;opacity:0} 12%,22%{top:100px;opacity:1} 30%{opacity:0} 100%{opacity:0} }
+@keyframes iaRight { 0%{transform:translateX(-60px);opacity:0} 12%,22%{opacity:1;transform:translateX(70px)} 30%{opacity:0} 100%{opacity:0} }
+@keyframes iaLeft  { 0%{transform:translateX(60px);opacity:0}  12%,22%{opacity:1;transform:translateX(-70px)} 30%{opacity:0} 100%{opacity:0} }
+#ia-phase::after { animation: iaText 12s infinite; color: var(--violet); }
+@keyframes iaText {
+    0%,33%  { content: "1 — Local Signature Check"; }
+    34%,66% { content: "2 — Synchronize Online Set \\2C\\ V"; }
+    67%,100%{ content: "3 — Proof of Malice Transfer"; }
+}
+
+
+/* Witness Decomposition block animations */
+@keyframes wdPulse {
+    0%,100% { opacity: .35; }
+    50%      { opacity: .9; }
+}
+@keyframes wdPop {
+    0%,60%  { transform: scaleY(1); }
+    70%     { transform: scaleY(1.18); }
+    85%,100%{ transform: scaleY(1); }
+}
+
+/* ─── STEP-REVEAL SYSTEM ────────────────────────────────────────────────────
+   Elements with data-step="N" are invisible until the slide's step counter
+   reaches N. JS adds .step-on when revealed.
+   data-anim controls the entrance direction (default = up).
+───────────────────────────────────────────────────────────────────────────── */
+[data-step] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity .42s cubic-bezier(.22,1,.36,1),
+                transform .42s cubic-bezier(.22,1,.36,1);
+    will-change: opacity, transform;
+}
+[data-step][data-anim="left"]  { transform: translateX(-24px); }
+[data-step][data-anim="right"] { transform: translateX(24px);  }
+[data-step][data-anim="scale"] { transform: scale(.93); opacity: 0; }
+[data-step].step-on {
+    opacity: 1 !important;
+    transform: none !important;
+}
+
+/* Step-indicator dots — centred at the bottom of stepped slides */
+.sdots {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+    z-index: 60;
+    pointer-events: none;
+}
+.sdot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--border2);
+    transition: background .2s, transform .2s;
+    flex-shrink: 0;
+}
+.sdot.cur  { background: var(--violet); transform: scale(1.5); }
+.sdot.done { background: var(--muted); }
+
+/* Subtle "click to reveal" hint that fades after first advance */
+.step-hint {
+    position: absolute;
+    bottom: 38px;
+    right: 80px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: .08em;
+    opacity: .6;
+    pointer-events: none;
+    transition: opacity .3s;
+}
+.step-hint.hidden { opacity: 0; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+    <!-- ── CHROME ──────────────────────────────────────────────────────── -->
+    <div id="logo">
+        <img src="https://companieslogo.com/img/orig/JPM_BIG.D-62c873ed.png?t=1720244492" alt="JPMC">
+    </div>
+    <div id="counter"><span id="cur">1</span> / <span id="tot">13</span></div>
+    <div id="progress"></div>
+    <div id="nav">
+        <button class="btn" onclick="go(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+        <button class="btn" onclick="go(1)"><i class="fa-solid fa-chevron-right"></i></button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 1 — TITLE                                                   -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide active" id="s1">
+        <div class="left-band"></div>
+        <div class="title-block">
+            <div class="kicker">JPMorgan AI Research · AlgoCRYPT CoE · 2026</div>
+            <h1>TAPAS<br><em>Private Aggregation</em></h1>
+            <div class="subtitle">
+                Efficient Two-Server Asymmetric Private Aggregation<br>Beyond Prio(+)
+            </div>
+            <div class="authors">
+                <strong>Harish Karthikeyan</strong> &nbsp;·&nbsp; Antigoni Polychroniadou
+            </div>
+            <div class="badges">
+                <span class="pill"><i class="fa-solid fa-bolt"></i> Asymmetric</span>
+                <span class="pill green"><i class="fa-solid fa-cube"></i> Post-Quantum</span>
+                <span class="pill amber"><i class="fa-solid fa-fingerprint"></i> Identifiable Abort</span>
+                <span class="pill red"><i class="fa-solid fa-gauge-high"></i> 93× Speedup</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 2 — THE PROBLEM                                             -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide">
+        <div class="slide-tag">Motivation</div>
+        <div class="slide-title">The <span>Symmetric Bottleneck</span></div>
+        <div class="content" style="justify-content:flex-start;gap:16px;">
+            <div class="cols-2">
+                <div class="card red">
+                    <div class="card-label red">Prior Work — Prio · Elsa · Heli</div>
+                    <h3>Symmetric Cost on Both Servers</h3>
+                    <p>Both servers must process <strong>O(L)</strong> data, where L is the model dimension. In modern deep learning L ≈ 10<sup>7</sup> parameters, making the secondary server prohibitively expensive to operate.</p>
+                    <div class="rule"></div>
+                    <ul style="padding-left:16px;">
+                        <li style="font-size:15px;color:var(--muted2)">No post-quantum security (DL / non-standard assumptions)</li>
+                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">Abort is indistinguishable from client misbehaviour</li>
+                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">Server-side comm. scales with L, not client count n</li>
+                    </ul>
+                </div>
+                <div class="card green">
+                    <div class="card-label green">TAPAS — Our Approach</div>
+                    <h3>Intentional Asymmetry</h3>
+                    <p>One server bears the full <strong>O(L)</strong> aggregation load; the other is a lightweight facilitator whose cost is <strong>independent of L</strong> and scales only with the number of clients n.</p>
+                    <div class="rule"></div>
+                    <ul style="padding-left:16px;">
+                        <li style="font-size:15px;color:var(--muted2)">Post-quantum: LWE + SIS only</li>
+                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">Identifiable Abort: faults are cryptographically attributed</li>
+                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">No trusted setup or preprocessing</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="hl-strip" style="margin-top:4px;">
+                <div style="display:flex;gap:32px;justify-content:center;align-items:center;">
+                    <div class="stat"><div class="stat-num">93×</div><div class="stat-label">speedup vs Prio</div></div>
+                    <div style="width:1px;height:50px;background:var(--border2);"></div>
+                    <div class="stat"><div class="stat-num">17.5×</div><div class="stat-label">speedup vs Elsa</div></div>
+                    <div style="width:1px;height:50px;background:var(--border2);"></div>
+                    <div class="stat"><div class="stat-num">30×</div><div class="stat-label">less work for Server 2</div></div>
+                    <div style="width:1px;height:50px;background:var(--border2);"></div>
+                    <div class="stat"><div class="stat-num">O(nλ)</div><div class="stat-label">Server 2 communication</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 3 — CORE PROTOCOL                                           -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide">
+        <div class="slide-tag">Core Construction</div>
+        <div class="slide-title">LWE-Based <span>Asymmetric Masking</span></div>
+        <div class="content" style="justify-content:flex-start;gap:18px;">
+
+            <!-- Animation arena -->
+            <div class="arena" style="height:200px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;">
+                <div class="arena-phase" id="bb-phase"></div>
+                <div class="actor-box violet">Clients<small>i ∈ {1…n}</small></div>
+                <div class="actor-box cyan">Server 2<small>Facilitator</small></div>
+                <div class="actor-box green">Server 1<small>Aggregator</small></div>
+
+                <div class="pkt" id="bb-y">\(\mathbf{y}_i = \mathbf{A}\mathbf{s}_i + \mathbf{e}_i + \Delta\mathbf{x}_i \in \mathbb{Z}_q^L\)</div>
+                <div class="pkt" id="bb-s">\(\mathbf{s}_i \in \mathbb{Z}_q^\lambda\)</div>
+                <div class="pkt" id="bb-sum">\(\textstyle\sum \mathbf{s}_i \in \mathbb{Z}_q^\lambda\)</div>
+            </div>
+
+            <div class="cols-2" style="gap:16px;">
+                <div class="card">
+                    <div class="card-label">Client</div>
+                    <p style="font-size:15px">
+                        1. Mask input \(\mathbf{x}_i\) as \(\mathbf{y}_i = \mathbf{A}\mathbf{s}_i + \mathbf{e}_i + \Delta\mathbf{x}_i \in \mathbb{Z}_q^L\)<br>
+                        2. Send large \(\mathbf{y}_i\) (O(L)) → Server 1<br>
+                        3. Send small seed \(\mathbf{s}_i\) (O(λ)) → Server 2
+                    </p>
+                </div>
+                <div class="card green">
+                    <div class="card-label green">Decryption at Server 1</div>
+                    <p style="font-size:15px">
+                        1. Collect \(\sum \mathbf{y}_i\) — all O(L) work stays here<br>
+                        2. Receive only \(\sum \mathbf{s}_i\) from Server 2 — O(λ)<br>
+                        3. Output \(\approx \operatorname{Decode}\!\bigl(\textstyle\sum\mathbf{y}_i - \mathbf{A}\sum\mathbf{s}_i\bigr)\)
+                    </p>
+                </div>
+            </div>
+
+            <div class="card" style="background:transparent;border:none;border-radius:0;padding:0">
+                <p style="font-size:15px;color:var(--muted);font-style:italic;">
+                    Additive homomorphism: \(\sum_i \mathbf{y}_i = \mathbf{A}\sum_i\mathbf{s}_i + \sum_i\mathbf{e}_i + \Delta\sum_i\mathbf{x}_i\).
+                    Server 1 recovers \(\sum\mathbf{x}_i\) using only the aggregate seed — never individual inputs.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 4 — CONTRIBUTIONS vs PRIOR WORK                            -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide">
+        <div class="slide-tag">Contribution Summary</div>
+        <div class="slide-title">TAPAS <span>vs. Prior Work</span></div>
+        <div class="content" style="justify-content:flex-start;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:240px">Property</th>
+                        <th>Prio</th>
+                        <th>Prio+</th>
+                        <th>Elsa</th>
+                        <th>Heli</th>
+                        <th style="color:var(--violet)">TAPAS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>S2 comm. independent of L</td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td class="tick">✓</td>
+                    </tr>
+                    <tr>
+                        <td>No trusted setup</td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td class="tick">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Post-quantum (LWE / SIS only)</td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td class="tick">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Malicious server security</td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td style="color:var(--amber)">✓ MP</td>
+                        <td style="color:var(--amber)">✓ MP</td>
+                        <td class="tick">✓ IA</td>
+                    </tr>
+                    <tr>
+                        <td>Identifiable Abort</td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
+                        <td class="tick">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Input validation / malicious clients</td>
+                        <td class="tick">✓</td><td class="tick">✓</td>
+                        <td class="tick">✓</td><td class="tick">✓</td>
+                        <td class="tick">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Arbitrary integer inputs</td>
+                        <td class="tick">✓</td><td class="tick">✓</td>
+                        <td class="tick">✓</td><td><span class="cross">✗</span></td>
+                        <td class="tick">✓</td>
+                    </tr>
+                    <tr class="tapas-row">
+                        <td><strong>93× speedup over Prio (L = 2<sup>18</sup>)</strong></td>
+                        <td>—</td><td>—</td><td>—</td><td>—</td>
+                        <td class="tick">✓</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size:13px;color:var(--muted);margin-top:12px;font-style:italic;">
+                MP = Malicious Privacy &nbsp;·&nbsp; IA = Identifiable Abort (stronger)
+            </p>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 5 — INPUT VALIDATION & ZKPs                                 -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide" data-steps="1">
+        <div class="slide-tag">Input Validation</div>
+        <div class="slide-title">Two ZKP <span>Instantiations</span></div>
+        <div class="content" style="gap:16px;justify-content:flex-start;">
+            <p style="font-size:16px;color:var(--muted2);margin-bottom:4px;">
+                To guarantee clients' inputs satisfy norm constraints (L<sub>2</sub> / L<sub>∞</sub>), TAPAS offers two proof systems with complementary trade-offs.
+            </p>
+            <div class="cols-2" style="flex:1;">
+                <div class="card amber" style="padding:22px 24px;">
+                    <div class="card-label amber">TAPAS<sub>BP</sub> — Bulletproof Variant</div>
+                    <h3 style="margin-bottom:12px;">Group-Based Proofs</h3>
+                    <ul style="font-size:15px;padding-left:16px;color:var(--muted2);">
+                        <li>Pedersen commitments + Bulletproofs over prime-order group</li>
+                        <li>Four-square theorem proves L<sub>2</sub> / L<sub>∞</sub> norms <em>exactly</em></li>
+                        <li>Schwartz-Zippel collapses L equations → single inner product</li>
+                        <li>Proof size O(log L) — no bit-decomposition blowup</li>
+                        <li>Better than Heli's O(tL) expansion</li>
+                        <li style="color:var(--red);margin-top:8px;">Limitation: group exponentiations expensive at large L</li>
+                    </ul>
+                </div>
+                <div class="card" style="padding:22px 24px;" data-step="1" data-anim="right">
+                    <div class="card-label">TAPAS<sub>LWE</sub> — Lattice-Only Variant</div>
+                    <h3 style="margin-bottom:12px;">All-Lattice Proofs</h3>
+                    <ul style="font-size:15px;padding-left:16px;color:var(--muted2);">
+                        <li>Proofs entirely over LWE modulus q — no extra group field</li>
+                        <li>Block-wise decomposition: k blocks of size d = L/k</li>
+                        <li><strong>Independent Restarts</strong>: each block samples independently → O(k·M) runtime</li>
+                        <li>A combination of techniques reduces soundness slack from √L to √d</li>
+                        <li>No group exponentiations whatsoever</li>
+                        <li style="color:var(--green);margin-top:8px;">Best asymptotic performance for large L</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 6 — LATTICE CAVEATS                                         -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide" data-steps="3">
+        <div class="slide-tag">Technical Challenge</div>
+        <div class="slide-title">Three <span>Lattice Caveats</span></div>
+        <div class="content">
+            <div class="cols-3">
+                <div class="card red" data-step="1" data-anim="scale">
+                    <div class="card-label red">Caveat 1</div>
+                    <h3>Rejection Sampling</h3>
+                    <p>Responses must be over the integers, not modulo q. We must sample carefully and <em>abort</em> if the response violates a norm bound — to prevent leaking the secret.</p>
+                </div>
+                <div class="card amber" data-step="2" data-anim="scale">
+                    <div class="card-label amber">Caveat 2</div>
+                    <h3>Repetition Cost</h3>
+                    <p>Reducing rejection probability forces a smaller challenge space, which increases soundness error. More <strong>repetitions</strong> of the protocol are required to compensate.</p>
+                </div>
+                <div class="card green" data-step="3" data-anim="scale">
+                    <div class="card-label green">Caveat 3</div>
+                    <h3>Soundness Slack</h3>
+                    <p>The witness can only be extracted with an error margin. For monolithic proofs over dimension L:</p>
+                    <div class="eq" style="text-align:center;">Slack \(\gamma \approx \sqrt{L}\)</div>
+                    <p>This is the core bottleneck for large L.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 7 — SIGMA PROTOCOL                                          -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide" data-steps="2">
+        <div class="slide-tag">Zero-Knowledge Proof</div>
+        <div class="slide-title">Lattice \(\Sigma\)-Protocol — <span>Interactive Proof</span></div>
+        <div class="content" style="justify-content:flex-start;gap:16px;">
+            <p style="font-size:15px;color:var(--muted2);">
+                Status: <span id="sigma-phase"></span>
+            </p>
+            <div class="arena" style="height:300px;display:flex;align-items:center;justify-content:space-between;padding:0 60px;gap:40px;">
+                <div class="arena-phase" id="ignore1"></div>
+                <!-- Prover -->
+                <div style="text-align:center;">
+                    <div class="actor-box violet" style="width:200px;padding:16px 20px;">
+                        <i class="fa-solid fa-user-ninja" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+                        Prover <small>Client</small>
+                    </div>
+                    <div style="margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted2);text-align:left;min-height:44px;">
+                        <span class="prover-txt"></span>
+                    </div>
+                </div>
+
+                <!-- Packets -->
+                <div class="pkt" id="pkt-t">Commit: \(t = Ar_s + r_e + \Delta r_x\)</div>
+                <div class="pkt" id="pkt-c">Challenge: \(c\)</div>
+                <div class="pkt" id="pkt-z">Response: \(z_s, z_e, z_x\)</div>
+
+                <!-- Verifier -->
+                <div style="text-align:center;">
+                    <div class="actor-box green" style="width:200px;padding:16px 20px;">
+                        <i class="fa-solid fa-shield-halved" style="font-size:28px;display:block;margin-bottom:8px;"></i>
+                        Verifier <small>Server</small>
+                    </div>
+                    <div style="margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted2);text-align:left;min-height:44px;">
+                        <span class="verifier-txt"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="cols-2" style="gap:14px;">
+
+                <!-- Witness Decomposition — step 1 -->
+                <div class="card" style="padding:16px 20px;" data-step="1" data-anim="left">
+                    <div class="card-label">Witness Decomposition</div>
+                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                        <!-- Block diagram -->
+                        <div id="wd-vis" style="flex-shrink:0;display:flex;flex-direction:column;gap:4px;padding-top:2px;">
+                            <div style="display:flex;gap:3px;align-items:center;">
+                                <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);width:14px;">L</div>
+                                <div style="height:22px;background:var(--border2);border-radius:3px;overflow:hidden;display:flex;gap:1px;width:140px;">
+                                    <div class="wd-block" style="flex:1;background:var(--violet);opacity:.8;animation:wdPulse 3s ease-in-out infinite;animation-delay:0s;"></div>
+                                    <div class="wd-block" style="flex:1;background:var(--violet);opacity:.6;animation:wdPulse 3s ease-in-out infinite;animation-delay:.3s;"></div>
+                                    <div class="wd-block" style="flex:1;background:var(--violet);opacity:.5;animation:wdPulse 3s ease-in-out infinite;animation-delay:.6s;"></div>
+                                    <div class="wd-block" style="flex:1;background:var(--violet);opacity:.4;animation:wdPulse 3s ease-in-out infinite;animation-delay:.9s;"></div>
+                                    <div class="wd-block" style="flex:1;background:var(--violet);opacity:.3;animation:wdPulse 3s ease-in-out infinite;animation-delay:1.2s;"></div>
+                                </div>
+                                <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted2);">monolithic</div>
+                            </div>
+                            <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center;width:154px;margin:2px 0;">↓ split into k blocks</div>
+                            <div style="display:flex;gap:3px;align-items:center;">
+                                <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);width:14px;">d</div>
+                                <div style="display:flex;gap:2px;">
+                                    <div style="width:24px;height:22px;background:var(--green);border-radius:3px;opacity:.9;animation:wdPop 3s ease-in-out infinite;animation-delay:1.5s;"></div>
+                                    <div style="width:24px;height:22px;background:var(--green);border-radius:3px;opacity:.7;animation:wdPop 3s ease-in-out infinite;animation-delay:1.7s;"></div>
+                                    <div style="width:24px;height:22px;background:var(--green);border-radius:3px;opacity:.6;animation:wdPop 3s ease-in-out infinite;animation-delay:1.9s;"></div>
+                                    <div style="width:24px;height:22px;background:var(--green);border-radius:3px;opacity:.5;animation:wdPop 3s ease-in-out infinite;animation-delay:2.1s;"></div>
+                                    <div style="width:24px;height:22px;background:var(--green);border-radius:3px;opacity:.4;animation:wdPop 3s ease-in-out infinite;animation-delay:2.3s;"></div>
+                                </div>
+                                <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--green);">d = L/k</div>
+                            </div>
+                        </div>
+                        <div>
+                            <p style="font-size:15px">Split L-dim witness into k blocks of size d = L/k.</p>
+                            <p style="font-size:15px;margin-top:6px;">Slack shrinks from <strong style="color:var(--red);">√L</strong> → <strong style="color:var(--green);">√d</strong>. Each block restarts independently → expected time <strong>O(k·M)</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bimodal Rejection Sampling — step 2 -->
+                <div class="card green" style="padding:16px 20px;" data-step="2" data-anim="right">
+                    <div class="card-label green">Bimodal Rejection Sampling</div>
+                    <div style="display:flex;gap:16px;align-items:flex-start;">
+                        <!-- Distribution visual -->
+                        <svg id="brs-vis" width="110" height="72" viewBox="0 0 110 72" style="flex-shrink:0;overflow:visible;">
+                            <!-- Gaussian curves -->
+                            <defs>
+                                <linearGradient id="gL" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#f0566a" stop-opacity=".8"/><stop offset="100%" stop-color="#f0566a" stop-opacity=".1"/></linearGradient>
+                                <linearGradient id="gG" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#1cd6a0" stop-opacity=".85"/><stop offset="100%" stop-color="#1cd6a0" stop-opacity=".1"/></linearGradient>
+                            </defs>
+                            <!-- Wide (bad) distribution — red -->
+                            <path d="M5,68 Q20,68 28,52 Q35,38 38,20 Q41,6 44,2 Q47,6 50,20 Q53,38 56,52 Q60,68 70,68 Z" fill="url(#gL)" opacity=".6"/>
+                            <text x="37" y="62" font-family="DM Mono,monospace" font-size="8" fill="#f0566a" text-anchor="middle">σ ≫ ‖w‖</text>
+                            <!-- Narrow bimodal (good) — green, animated -->
+                            <path id="brs-curve" d="M30,68 Q34,68 37,50 Q39,32 42,12 Q44,2 46,12 Q49,32 51,50 Q54,68 58,68 Z" fill="url(#gG)">
+                                <animate attributeName="opacity" values="0;1;1;0.9" dur="3s" begin="0.8s" fill="freeze"/>
+                            </path>
+                            <text x="44" y="62" font-family="DM Mono,monospace" font-size="8" fill="#1cd6a0" text-anchor="middle">
+                                <animate attributeName="opacity" values="0;0;1;1" dur="3s" begin="0.8s" fill="freeze"/>
+                                σ ∝ ‖w‖
+                            </text>
+                            <!-- x-axis -->
+                            <line x1="4" y1="68" x2="106" y2="68" stroke="#252a45" stroke-width="1"/>
+                            <!-- centre tick -->
+                            <line x1="55" y1="65" x2="55" y2="71" stroke="#6b7394" stroke-width="1"/>
+                            <text x="55" y="71" font-family="DM Mono,monospace" font-size="7" fill="#6b7394" text-anchor="middle" dominant-baseline="hanging">0</text>
+                        </svg>
+                        <div>
+                            <p style="font-size:15px">Target a bimodal distribution shaped like witness ± noise.</p>
+                            <p style="font-size:15px;margin-top:6px;">Requires much smaller \( \sigma \) while ensurng higher acceptance rate.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 8 — INDEPENDENT RESTARTS                                    -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide" data-steps="2">
+        <div class="slide-tag">Key Innovation</div>
+        <div class="slide-title">Independent Restarts — <span>Closing the Security Gap</span></div>
+        <div class="content" style="gap:18px;">
+            <div class="cols-2">
+                <div>
+                    <div class="card">
+                        <div class="card-label">The Technique</div>
+                        <p>Each block performs rejection sampling <strong>independently</strong>. If block 5 fails, only block 5 restarts — all other blocks keep their accepted values.</p>
+                        <div class="eq" style="text-align:center;">Expected Time: \(\mathcal{O}(k \cdot M)\) with \(M \approx 2\)</div>
+                        <p style="margin-top:8px;">Transforms exponential-in-k convergence into linear, restoring practical efficiency for high-dimensional witnesses.</p>
+                    </div>
+                    <div class="card red" style="margin-top:16px;" data-step="1">
+                        <div class="card-label red">The Security Gap</div>
+                        <p>Independent blocks open an attack: a malicious client could use different secrets s<sub>j</sub> per block to inject garbage. This breaks the global consistency guarantee.</p>
+                        <p style="margin-top:8px;"><strong>Question:</strong> How do we enforce s<sub>1</sub> = s<sub>2</sub> = … = s<sub>k</sub> without reverting to O(L) communication for Server 2?</p>
+                    </div>
+                </div>
+                <div class="card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;" data-step="2" data-anim="right">
+                    <i class="fa-solid fa-server" style="font-size:64px;color:var(--violet);opacity:.6;"></i>
+                    <div style="text-align:center;">
+                        <p style="font-size:14px;color:var(--text);font-weight:600;">Answer: Cross-Server Digest Check</p>
+                        <p style="font-size:15px;margin-top:8px;">Server 2 re-derives responses using the client's single secret s, hashes them, and sends a 256-bit digest to Server 1 for verification. Communication overhead for S2 remains O(λ).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 9 — DIGEST CHECK                                            -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide">
+        <div class="slide-tag">Global Consistency</div>
+        <div class="slide-title">Cross-Server <span>Digest Verification</span></div>
+        <div class="content" style="justify-content:flex-start;gap:16px;">
+            <p style="font-size:15px;color:var(--muted2);">Status: <span id="dig-phase"></span></p>
+            <div class="arena" style="height:196px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;">
+                <div class="actor-box violet">Client</div>
+                <div class="actor-box cyan">Server 2<small>Facilitator</small></div>
+                <div class="actor-box green">Server 1<small>Aggregator</small></div>
+                <div class="pkt" id="dp1">Secret s + Seed</div>
+                <div class="pkt" id="dp2">ZK Responses z<sub>1</sub> … z<sub>k</sub></div>
+                <div class="pkt" id="dp3">Digest H = Hash(z′<sub>j</sub>)</div>
+                <div class="d-ok">✔ CONSISTENT</div>
+            </div>
+            <div class="cols-2" style="gap:14px;">
+                <div class="card cyan" style="padding:16px 20px;">
+                    <div class="card-label cyan">Server 2 — Lightweight</div>
+                    <p style="font-size:15px">
+                        1. Expand seed → {r<sub>j</sub>}<br>
+                        2. Re-derive z′<sub>j</sub> = r<sub>j</sub> + c<sub>j</sub> · s for each block j<br>
+                        3. Compute digest H = Hash({z′<sub>j</sub>, c<sub>j</sub>}) → send to S1<br>
+                        <strong style="color:var(--cyan);">Bandwidth: 256 bits total.</strong>
+                    </p>
+                </div>
+                <div class="card green" style="padding:16px 20px;">
+                    <div class="card-label green">Server 1 — Aggregator</div>
+                    <p style="font-size:15px">
+                        1. Collect client ZK responses z<sub>j</sub><br>
+                        2. Compute H′ = Hash({z<sub>j</sub>, c<sub>j</sub>})<br>
+                        3. If H = H′: client used consistent s across all blocks ✓<br>
+                        <strong style="color:var(--green);">Security from collision resistance of H.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 10 — SECURITY vs MALICIOUS SERVER 1                         -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide" data-steps="4">
+        <div class="slide-tag">Malicious Security</div>
+        <div class="slide-title">PROM + <span>Equivocable Commitments</span></div>
+        <div class="content" style="gap:14px;justify-content:flex-start;">
+            <div class="cols-2" style="gap:14px;">
+                <div class="card red" data-step="1" data-anim="left">
+                    <div class="card-label red">The Simulation Trap</div>
+                    <p style="font-size:15px">A malicious Server 1 drops ciphertexts dynamically. The simulator must commit to honest ciphertexts before knowing which clients S1 will drop — but it cannot query the ideal functionality without knowing the final online set.</p>
+                </div>
+                <div class="card" data-step="2" data-anim="right">
+                    <div class="card-label">The PROM Solution</div>
+                    <p style="font-size:15px">Add a secondary programmable mask derived from a seed ρ<sub>i</sub>:</p>
+                    <div class="eq">\(y_i = As_i + e_i + \Delta x_i + \mathcal{H}'(\rho_i)\)</div>
+                    <p style="font-size:15px">The simulator programs H′(ρ<sub>i</sub>) after the online set is fixed, injecting a correction term into the sum.</p>
+                </div>
+            </div>
+            <div class="cols-2" style="gap:14px;">
+                <div class="card amber" data-step="3" data-anim="left">
+                    <div class="card-label amber">The ZKP Dilemma</div>
+                    <p style="font-size:15px">Proving correctness of y<sub>i</sub> now requires proving inside the ZKP that H′(ρ<sub>i</sub>) was computed correctly — expensive and <em>incompatible</em> with the Programmable Random Oracle Model used for simulation.</p>
+                </div>
+                <div class="card green" data-step="4" data-anim="right">
+                    <div class="card-label green">Equivocation Technique</div>
+                    <p style="font-size:15px">Commit directly to the raw mask w without proving its derivation. Use an equivocable commitment (Pedersen DL trapdoor <em>or</em> wide Ajtai SIS matrix) to re-open to w<sub>target</sub> after the online set is finalised.</p>
+                    <div class="eq" style="font-size:14px;">\(\text{Prove } y_i \text{ w.r.t. } w \quad + \quad \text{Equivocal commitment to } w\)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 11 — IDENTIFIABLE ABORT                                     -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide" data-steps="3">
+        <div class="slide-tag">Stronger Security Guarantee</div>
+        <div class="slide-title">Identifiable <span>Abort</span></div>
+        <div style="flex:1;display:flex;gap:24px;align-items:stretch;min-height:0;">
+            <!-- Left info column -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:14px;justify-content:center;">
+                <div class="card amber" style="padding:18px 22px;" data-step="1">
+                    <div class="card-label amber"><i class="fa-solid fa-signature"></i> &nbsp;1. Binding Handshake</div>
+                    <p style="font-size:15px">Before exchanging any data, servers intersect their valid-client sets V<sub>1</sub> ∩ V<sub>2</sub> = V and each <strong>signs and broadcasts V</strong>. Neither server can later deny seeing a client's message.</p>
+                </div>
+                <div class="card red" style="padding:18px 22px;" data-step="2">
+                    <div class="card-label red"><i class="fa-solid fa-gavel"></i> &nbsp;2. Proof of Malice</div>
+                    <p style="font-size:15px">If a digest fails, the server must produce the <strong>original signed message</strong> as evidence. Because signatures are non-repudiable:</p>
+                    <ul style="font-size:15px;padding-left:16px;margin-top:6px;">
+                        <li>Server cannot fake a client error</li>
+                        <li style="margin-top:4px">Server cannot frame an honest client</li>
+                    </ul>
+                </div>
+                <div class="card green" style="padding:18px 22px;" data-step="3">
+                    <div class="card-label green"><i class="fa-solid fa-user-shield"></i> &nbsp;3. Privacy Guarantee</div>
+                    <p style="font-size:15px">False alarms reveal the server as the cheater — <strong>without exposing any client secret</strong>.</p>
+                </div>
+            </div>
+
+            <!-- Right animation column -->
+            <div style="width:360px;display:flex;align-items:center;justify-content:center;">
+                <div class="arena" style="width:320px;height:400px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:40px 0;position:relative;">
+                    <div class="arena-phase" id="ia-phase" style="top:12px;right:14px;font-size:12px;"></div>
+
+                    <div class="actor-box" style="color:var(--amber);border-color:var(--amber);background:rgba(245,165,36,.07);width:180px;">
+                        <i class="fa-solid fa-users" style="display:block;margin-bottom:4px;"></i>
+                        Clients
+                    </div>
+
+                    <div class="pkt" id="ia-pkt-sig" style="left:50%;transform:translateX(-50%);">Signed \((m_i, \sigma_i)\)</div>
+
+                    <div style="display:flex;gap:40px;width:100%;justify-content:center;">
+                        <div class="actor-box cyan" style="width:110px;font-size:13px;padding:10px 8px;">S2</div>
+                        <div class="actor-box green" style="width:110px;font-size:13px;padding:10px 8px;">S1</div>
+                    </div>
+
+                    <div class="pkt" id="ia-pkt-set" style="font-size:13px;">Valid Set V</div>
+                    <div class="pkt" id="ia-pkt-proof" style="font-size:13px;">Signed Proof σ</div>
+
+                    <p style="font-size:13px;color:var(--muted);text-align:center;padding:0 20px;">Non-repudiation prevents anonymous stalling attacks</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 12 — PERFORMANCE: VECTOR LENGTH SCALING                     -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide">
+        <div class="slide-tag">Empirical Results · n = 100 clients, AWS c5.9xlarge + ABIDES network model</div>
+        <div class="slide-title">Computation <span>vs. Vector Length L</span></div>
+        <div class="content" style="justify-content:flex-start;gap:10px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;flex:1;">
+
+                <!-- CLIENT -->
+                <div class="card" style="padding:16px 18px;">
+                    <div class="card-label" style="margin-bottom:8px;">Client Computation</div>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">L = 2<sup>16</sup> &nbsp;/&nbsp; 2<sup>17</sup> &nbsp;/&nbsp; 2<sup>18</sup> &nbsp;(seconds)</p>
+                    <p style="font-size:13px;color:var(--muted2);margin-bottom:3px;">Prio</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:18%;background:#1f2937;font-size:12px;">13.3</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:48%;background:#1f2937;font-size:12px;">35.3</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:100%;background:#1f2937;font-size:12px;">73.4</div></div></div>
+                    <p style="font-size:13px;color:var(--muted2);margin-bottom:3px;">Elsa</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:4.3%;background:#334155;font-size:12px;min-width:28px;">3.1</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:9.4%;background:#334155;font-size:12px;min-width:28px;">6.9</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:18.8%;background:#334155;font-size:12px;">13.8</div></div></div>
+                    <p style="font-size:13px;color:var(--violet);font-weight:600;margin-bottom:3px;">TAPAS</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:0.3%;background:linear-gradient(90deg,var(--violet),#a78bfa);font-size:12px;min-width:36px;">0.20</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:0.5%;background:linear-gradient(90deg,var(--violet),#a78bfa);font-size:12px;min-width:36px;">0.40</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:1.1%;background:linear-gradient(90deg,var(--violet),#a78bfa);font-size:12px;min-width:36px;">0.79</div></div></div>
+                    <div style="padding:6px 10px;background:var(--violet-lo);border-radius:6px;text-align:center;">
+                        <span style="font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:var(--violet);">93×</span>
+                        <span style="font-size:12px;color:var(--muted);display:block;">vs Prio &nbsp;·&nbsp; 17.5× vs Elsa</span>
+                    </div>
+                </div>
+
+                <!-- SERVER 1 -->
+                <div class="card" style="padding:16px 18px;">
+                    <div class="card-label" style="margin-bottom:8px;">Server 1 Computation</div>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">L = 2<sup>16</sup> &nbsp;/&nbsp; 2<sup>17</sup> &nbsp;/&nbsp; 2<sup>18</sup> &nbsp;(seconds)</p>
+                    <p style="font-size:13px;color:var(--muted2);margin-bottom:3px;">Prio</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:17%;background:#1f2937;font-size:12px;">2.6</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:51%;background:#1f2937;font-size:12px;">7.7</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:100%;background:#1f2937;font-size:12px;">15.0</div></div></div>
+                    <p style="font-size:13px;color:var(--muted2);margin-bottom:3px;">Elsa</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:24.9%;background:#334155;font-size:12px;">3.7</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:52.8%;background:#334155;font-size:12px;">7.9</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:100%;background:#334155;font-size:12px;">15.4</div></div></div>
+                    <p style="font-size:13px;color:var(--violet);font-weight:600;margin-bottom:3px;">TAPAS</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:17%;background:linear-gradient(90deg,var(--violet),#a78bfa);font-size:12px;">2.6</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:34.3%;background:linear-gradient(90deg,var(--violet),#a78bfa);font-size:12px;">5.2</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:68%;background:linear-gradient(90deg,var(--violet),#a78bfa);font-size:12px;">10.2</div></div></div>
+                    <div style="padding:6px 10px;background:var(--violet-lo);border-radius:6px;text-align:center;">
+                        <span style="font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:var(--violet);">1.5×</span>
+                        <span style="font-size:12px;color:var(--muted);display:block;">faster than Elsa &amp; Prio at L=2<sup>18</sup></span>
+                    </div>
+                </div>
+
+                <!-- SERVER 2 + COMM -->
+                <div class="card green" style="padding:16px 18px;">
+                    <div class="card-label green" style="margin-bottom:8px;">Server 2 — Compute + Comm.</div>
+                    <p style="font-size:12px;color:var(--muted);margin-bottom:8px;font-family:'DM Mono',monospace;">L = 2<sup>16</sup> &nbsp;/&nbsp; 2<sup>17</sup> &nbsp;/&nbsp; 2<sup>18</sup> &nbsp;(seconds)</p>
+                    <p style="font-size:13px;color:var(--muted2);margin-bottom:3px;">Prio (compute ≈ comm.)</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:18%;background:#1f2937;font-size:12px;">3.1</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:50%;background:#1f2937;font-size:12px;">8.4</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:100%;background:#1f2937;font-size:12px;">17.0</div></div></div>
+                    <p style="font-size:13px;color:var(--muted2);margin-bottom:3px;">Elsa (comm. dominates at large L)</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:24%;background:#334155;font-size:12px;">12.4</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:49%;background:#334155;font-size:12px;">25.5</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:98%;background:#334155;font-size:12px;">50.6</div></div></div>
+                    <p style="font-size:13px;color:var(--green);font-weight:600;margin-bottom:3px;">TAPAS (comm. = 0.1 s flat, any L)</p>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:0.5%;background:linear-gradient(90deg,var(--green),#34d399);font-size:12px;min-width:38px;">0.26</div></div></div>
+                    <div class="bar-row" style="margin-bottom:2px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:0.7%;background:linear-gradient(90deg,var(--green),#34d399);font-size:12px;min-width:38px;">0.38</div></div></div>
+                    <div class="bar-row" style="margin-bottom:8px;"><div class="bar-track" style="height:20px;"><div class="bar-fill" style="width:1.2%;background:linear-gradient(90deg,var(--green),#34d399);font-size:12px;min-width:38px;">0.62</div></div></div>
+                    <div style="padding:6px 10px;background:var(--green-lo);border-radius:6px;text-align:center;">
+                        <span style="font-family:'Sora',sans-serif;font-weight:800;font-size:18px;color:var(--green);">352×</span>
+                        <span style="font-size:12px;color:var(--muted);display:block;">less inter-server traffic vs Elsa at L=2<sup>18</sup></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hl-strip" style="padding:9px 16px;display:flex;align-items:center;gap:14px;">
+                <i class="fa-solid fa-network-wired" style="color:var(--green);font-size:15px;flex-shrink:0;"></i>
+                <p style="font-size:14px;color:var(--muted2);margin:0;">
+                    <strong style="color:var(--green);">S2→S1 carries only n SHA-256 digests + one λ-field-element mask</strong> — bandwidth independent of L.
+                    Elsa/Prio send O(nL) data: at n=1000, L=2<sup>17</sup> that is <strong style="color:var(--text);">terabytes per round</strong>; TAPAS sends <strong style="color:var(--green);">kilobytes</strong>. The gap widens linearly as L grows.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 13 — PERFORMANCE: CLIENT + n SCALING                       -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide">
+        <div class="slide-tag">Empirical Results · n ∈ {100 … 1000}, L = 2¹⁶ / 2¹⁷</div>
+        <div class="slide-title">Scaling with <span>Client Count n</span></div>
+        <div class="content" style="justify-content:flex-start;gap:12px;">
+
+            <p style="font-size:15px;color:var(--muted2);">
+                TAPAS client cost is <strong>O(1) in n</strong> — clients prove independently, so cohort size doesn't affect per-client work. End-to-end times confirm the architecture advantage at n=1000:
+            </p>
+
+            <div class="card" style="padding:14px 20px;">
+                <div class="card-label" style="margin-bottom:10px;">Total Protocol Time — n=1000, L=2<sup>17</sup>&nbsp; (compute + simulated comm., seconds)</div>
+                <div class="bar-row">
+                    <div class="bar-lbl">Elsa</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:100%;background:#334155;">611.7</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-lbl">Prio</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:52.5%;background:#1f2937;">320.8</div></div>
+                </div>
+                <div class="bar-row">
+                    <div class="bar-lbl" style="color:var(--violet);font-weight:600;">TAPAS</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:14.5%;background:linear-gradient(90deg,var(--violet),var(--green));">88.8 &ensp;<span style="font-size:12px;opacity:.8;">(6.9× faster than Elsa)</span></div></div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;">
+                <div class="card" style="padding:14px 16px;">
+                    <div class="card-label" style="margin-bottom:8px;">Client Time · L=2<sup>16</sup></div>
+                    <div class="bar-row" style="margin-bottom:4px;">
+                        <div class="bar-lbl" style="width:100px;font-size:13px;">Elsa n=1000</div>
+                        <div class="bar-track" style="height:22px;"><div class="bar-fill" style="width:100%;background:#334155;font-size:12px;">31.4</div></div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-lbl" style="width:100px;font-size:13px;color:var(--violet);font-weight:600;">TAPAS n=1000</div>
+                        <div class="bar-track" style="height:22px;"><div class="bar-fill" style="width:0.6%;background:linear-gradient(90deg,var(--violet),#a78bfa);min-width:44px;font-size:12px;">0.20</div></div>
+                    </div>
+                    <p style="font-size:14px;color:var(--muted);margin-top:10px;">
+                        Elsa grows <strong style="color:var(--red);">155×</strong> from n=100→1000.<br>
+                        TAPAS stays <strong style="color:var(--green);">flat at 0.20 s</strong> regardless of cohort size.
+                    </p>
+                </div>
+
+                <div class="card green" style="padding:14px 16px;">
+                    <div class="card-label green" style="margin-bottom:8px;">S2 Compute · n=1000</div>
+                    <div class="bar-row" style="margin-bottom:4px;">
+                        <div class="bar-lbl" style="width:100px;font-size:13px;">Prio, L=2<sup>16</sup></div>
+                        <div class="bar-track" style="height:22px;"><div class="bar-fill" style="width:100%;background:#1f2937;font-size:12px;">89.0</div></div>
+                    </div>
+                    <div class="bar-row" style="margin-bottom:4px;">
+                        <div class="bar-lbl" style="width:100px;font-size:13px;">Elsa, L=2<sup>17</sup></div>
+                        <div class="bar-track" style="height:22px;"><div class="bar-fill" style="width:88.9%;background:#334155;font-size:12px;">79.1</div></div>
+                    </div>
+                    <div class="bar-row">
+                        <div class="bar-lbl" style="width:100px;font-size:13px;color:var(--green);font-weight:600;">TAPAS, L=2<sup>17</sup></div>
+                        <div class="bar-track" style="height:22px;"><div class="bar-fill" style="width:3.2%;background:linear-gradient(90deg,var(--green),#34d399);min-width:40px;font-size:12px;">2.82</div></div>
+                    </div>
+                    <p style="font-size:14px;color:var(--muted);margin-top:10px;">
+                        <strong style="color:var(--green);">55× vs Prio · 23× vs Elsa.</strong><br>
+                        Fits a <strong>t3.micro</strong> ($0.01/hr, 2 vCPUs, 1 GiB RAM).
+                    </p>
+                </div>
+
+                <div class="card amber" style="padding:14px 16px;">
+                    <div class="card-label amber" style="margin-bottom:8px;">Why Inter-Server Comm. Matters</div>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <div style="background:rgba(0,0,0,.35);border-radius:6px;padding:8px 10px;">
+                            <p style="font-size:13px;color:var(--muted2);margin-bottom:2px;">Prio / Elsa — S2 receives</p>
+                            <p style="font-family:'DM Mono',monospace;font-size:14px;color:var(--red);">O(nL) ciphertexts per round</p>
+                            <p style="font-size:12px;color:var(--muted);margin-top:2px;">n=1000, L=2<sup>17</sup>: terabytes of traffic</p>
+                        </div>
+                        <div style="background:rgba(28,214,160,.08);border:1px solid rgba(28,214,160,.25);border-radius:6px;padding:8px 10px;">
+                            <p style="font-size:13px;color:var(--muted2);margin-bottom:2px;">TAPAS — S2 receives</p>
+                            <p style="font-family:'DM Mono',monospace;font-size:14px;color:var(--green);">n seeds (λ bits each)</p>
+                            <p style="font-size:12px;color:var(--muted);margin-top:2px;">n=1000, L=2<sup>17</sup>: a few kilobytes</p>
+                        </div>
+                        <p style="font-size:13px;color:var(--muted2);">
+                            S2→S1 reply: <strong style="color:var(--green);">n digests + 1 mask = 0.1 s flat</strong>, independent of L.
+                            This is <strong style="color:var(--amber);">352×</strong> less comm. than Elsa at L=2<sup>18</sup>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <!-- SLIDE 14 — THANK YOU                                              -->
+    <!-- ══════════════════════════════════════════════════════════════════ -->
+    <div class="slide" id="s13">
+        <div class="left-band" style="background:linear-gradient(180deg,var(--green),var(--violet));"></div>
+        <div style="position:absolute;left:72px;top:50%;transform:translateY(-50%);max-width:860px;">
+            <div class="kicker">JPMorgan AI Research · AlgoCRYPT CoE</div>
+            <h1 style="font-family:'Sora',sans-serif;font-size:58px;font-weight:800;letter-spacing:-.04em;color:var(--text);margin-bottom:12px;line-height:1.05;">
+                Thank You
+            </h1>
+            <p style="font-size:18px;color:var(--green);margin-bottom:32px;">TAPAS: Efficient Two-Server Asymmetric Private Aggregation</p>
+
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;">
+                <div class="card" style="padding:12px 20px;display:inline-block;">
+                    <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--muted2);">harish.karthikeyan@jpmchase.com</div>
+                </div>
+                <div class="card" style="padding:12px 20px;display:inline-block;">
+                    <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--muted2);">antigoni.polychroniadou@jpmorgan.com</div>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:760px;">
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <span class="step-badge" style="background:var(--violet-lo);color:var(--violet);">✓</span>
+                    <p style="font-size:15px;color:var(--muted2);">S2 costs O(nλ) in comm. and compute — independent of L. Fits a t3.micro.</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <span class="step-badge" style="background:var(--green-lo);color:var(--green);">✓</span>
+                    <p style="font-size:15px;color:var(--muted2);">First two-server protocol with pure post-quantum security (LWE + SIS only)</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <span class="step-badge" style="background:var(--violet-lo);color:var(--violet);">✓</span>
+                    <p style="font-size:15px;color:var(--muted2);">Block-wise ZK proofs: slack √d instead of √L; independent restarts keep runtime O(k·M)</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <span class="step-badge" style="background:var(--green-lo);color:var(--green);">✓</span>
+                    <p style="font-size:15px;color:var(--muted2);">Identifiable Abort: any misbehaving party (client or server) is cryptographically identified</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <span class="step-badge" style="background:var(--violet-lo);color:var(--violet);">✓</span>
+                    <p style="font-size:15px;color:var(--muted2);">93× faster than Prio, 17.5× than Elsa (client, L=2<sup>18</sup>). End-to-end 6.9× faster at n=1000.</p>
+                </div>
+                <div style="display:flex;gap:10px;align-items:flex-start;">
+                    <span class="step-badge" style="background:var(--green-lo);color:var(--green);">✓</span>
+                    <p style="font-size:15px;color:var(--muted2);">352× less inter-server traffic than Elsa at L=2<sup>18</sup> — kilobytes instead of terabytes per round</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div><!-- /#stage -->
+
+<script>
+// ── SLIDE STATE ──────────────────────────────────────────────────────────────
+const slides   = [...document.querySelectorAll('.slide')];
+const total    = slides.length;
+let   cur      = 0;   // current slide index
+let   stepCur  = 0;   // steps revealed on current slide (0 = none)
+
+document.getElementById('tot').textContent = total;
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function slideSteps(idx) {
+    // How many data-step elements does this slide have?
+    return parseInt(slides[idx].dataset.steps || '0', 10);
+}
+
+function applySteps(idx, n) {
+    // Show all [data-step] elements whose step number <= n
+    slides[idx].querySelectorAll('[data-step]').forEach(el => {
+        const s = parseInt(el.dataset.step, 10);
+        el.classList.toggle('step-on', s <= n);
+    });
+    updateDots(idx, n);
+}
+
+function buildDots(idx) {
+    // Remove old dots
+    const old = slides[idx].querySelector('.sdots');
+    if (old) old.remove();
+    const n = slideSteps(idx);
+    if (n === 0) return;
+    const wrap = document.createElement('div');
+    wrap.className = 'sdots';
+    // dot 0 = slide title already visible; dots 1..n = steps
+    for (let i = 1; i <= n; i++) {
+        const d = document.createElement('div');
+        d.className = 'sdot';
+        d.dataset.s = i;
+        wrap.appendChild(d);
+    }
+    slides[idx].appendChild(wrap);
+
+    // hint label
+    const hint = document.createElement('div');
+    hint.className = 'step-hint';
+    hint.textContent = '→ click to reveal';
+    slides[idx].appendChild(hint);
+}
+
+function updateDots(idx, n) {
+    const total_steps = slideSteps(idx);
+    if (total_steps === 0) return;
+    slides[idx].querySelectorAll('.sdot').forEach(d => {
+        const s = parseInt(d.dataset.s, 10);
+        d.className = 'sdot' + (s < n ? ' done' : s === n ? ' cur' : '');
+    });
+    // Hide hint once first step is revealed
+    const hint = slides[idx].querySelector('.step-hint');
+    if (hint) hint.classList.toggle('hidden', n >= 1);
+}
+
+// ── RENDER ───────────────────────────────────────────────────────────────────
+function render() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+    document.getElementById('cur').textContent = cur + 1;
+    document.getElementById('progress').style.width = ((cur + 1) / total * 100) + '%';
+    applySteps(cur, stepCur);
+}
+
+// ── NAVIGATION ───────────────────────────────────────────────────────────────
+function advance() {
+    // If current slide has un-revealed steps, reveal next step
+    if (stepCur < slideSteps(cur)) {
+        stepCur++;
+        applySteps(cur, stepCur);
+        return;
+    }
+    // Otherwise move to next slide
+    if (cur < total - 1) {
+        cur++;
+        stepCur = 0;
+        render();
+    }
+}
+
+function retreat() {
+    // If steps are partially revealed, collapse them all
+    if (stepCur > 0) {
+        stepCur = 0;
+        applySteps(cur, 0);
+        return;
+    }
+    // Otherwise go to previous slide (fully revealed)
+    if (cur > 0) {
+        cur--;
+        stepCur = slideSteps(cur);   // arrive with all steps shown
+        render();
+    }
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+slides.forEach((_, i) => buildDots(i));
+render();
+
+// ── INPUT BINDINGS ───────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); advance(); }
+    if (e.key === 'ArrowLeft')                   { e.preventDefault(); retreat(); }
+});
+
+// Nav buttons already call go(±1) — rewire them
+window.go = d => (d > 0 ? advance() : retreat());
+
+// Touch/swipe
+let tx = 0;
+document.getElementById('stage').addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+document.getElementById('stage').addEventListener('touchend',   e => {
+    const dx = e.changedTouches[0].clientX - tx;
+    if (Math.abs(dx) > 40) (dx < 0 ? advance() : retreat());
+}, { passive: true });
+
+// Click anywhere on stage (outside nav buttons) also advances
+document.getElementById('stage').addEventListener('click', e => {
+    if (!e.target.closest('#nav')) advance();
+});
+</script>
+</body>
+</html>
