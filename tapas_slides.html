@@ -701,12 +701,12 @@ strong { color: var(--text); font-weight: 600; }
         <div class="content" style="justify-content:flex-start;gap:16px;">
             <div class="cols-2">
                 <div class="card red">
-                    <div class="card-label red">Prior Work — Prio · Elsa · Heli</div>
+                    <div class="card-label red">Prior Work — Prio · Elsa</div>
                     <h3>Symmetric Cost on Both Servers</h3>
                     <p>Both servers must process <strong>O(L)</strong> data, where L is the model dimension. In modern deep learning L ≈ 10<sup>7</sup> parameters, making the secondary server prohibitively expensive to operate.</p>
                     <div class="rule"></div>
                     <ul style="padding-left:16px;">
-                        <li style="font-size:15px;color:var(--muted2)">No post-quantum security (DL / non-standard assumptions)</li>
+                        <!-- <li style="font-size:15px;color:var(--muted2)">No post-quantum security (DL / non-standard assumptions)</li> -->
                         <li style="font-size:15px;color:var(--muted2);margin-top:5px">Abort is indistinguishable from client misbehaviour</li>
                         <li style="font-size:15px;color:var(--muted2);margin-top:5px">Server-side comm. scales with L, not client count n</li>
                     </ul>
@@ -877,10 +877,11 @@ strong { color: var(--text); font-weight: 600; }
                     <h3 style="margin-bottom:12px;">Group-Based Proofs</h3>
                     <ul style="font-size:15px;padding-left:16px;color:var(--muted2);">
                         <li>Pedersen commitments + Bulletproofs over prime-order group</li>
+                        <li>Building on prior works of GHV21, ACORN, Armadillo </li>
                         <li>Four-square theorem proves L<sub>2</sub> / L<sub>∞</sub> norms <em>exactly</em></li>
-                        <li>Schwartz-Zippel collapses L equations → single inner product</li>
-                        <li>Proof size O(log L) — no bit-decomposition blowup</li>
-                        <li>Better than Heli's O(tL) expansion</li>
+                        <!-- <li>Schwartz-Zippel collapses L equations → single inner product</li> -->
+                        <!-- <li>Proof size O(log L) — no bit-decomposition blowup</li> -->
+                        <li>Better than Heli's \( O(tL) \) expansion where \( \|\mathbf{x}\|_\infty\leq 2^t-1 \)</li>
                         <li style="color:var(--red);margin-top:8px;">Limitation: group exponentiations expensive at large L</li>
                     </ul>
                 </div>
@@ -889,9 +890,9 @@ strong { color: var(--text); font-weight: 600; }
                     <h3 style="margin-bottom:12px;">All-Lattice Proofs</h3>
                     <ul style="font-size:15px;padding-left:16px;color:var(--muted2);">
                         <li>Proofs entirely over LWE modulus q — no extra group field</li>
-                        <li>Block-wise decomposition: k blocks of size d = L/k</li>
+                        <!-- <li>Block-wise decomposition: k blocks of size d = L/k</li>
                         <li><strong>Independent Restarts</strong>: each block samples independently → O(k·M) runtime</li>
-                        <li>A combination of techniques reduces soundness slack from √L to √d</li>
+                        <li>A combination of techniques reduces soundness slack from √L to √d</li> -->
                         <li>No group exponentiations whatsoever</li>
                         <li style="color:var(--green);margin-top:8px;">Best asymptotic performance for large L</li>
                     </ul>
