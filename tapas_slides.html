@@ -34,6 +34,7 @@ window.MathJax = {
     --muted:     #6b7394;
     --muted2:    #9098ba;
     --dim:       rgba(232,234,244,.06);
+    --tick:     #07aa2b;
 }
 
 /* ─── RESET ───────────────────────────────────────────────────────────────── */
@@ -331,8 +332,8 @@ strong { color: var(--text); font-weight: 600; }
     background: rgba(124,111,247,.06);
 }
 .data-table tr.tapas-row td:first-child { color: var(--text); }
-.tick { color: var(--green); font-size: 14px; }
-.cross { color: var(--border2); font-size: 14px; }
+.tick { color: var(--tick); font-size: 14px; }
+.cross { color: var(--red); font-size: 14px; }
 
 /* ─── BAR CHART ──────────────────────────────────────────────────────────── */
 .bar-row {
@@ -687,7 +688,7 @@ strong { color: var(--text); font-weight: 600; }
                 <span class="pill"><i class="fa-solid fa-bolt"></i> Asymmetric</span>
                 <span class="pill green"><i class="fa-solid fa-cube"></i> Post-Quantum</span>
                 <span class="pill amber"><i class="fa-solid fa-fingerprint"></i> Identifiable Abort</span>
-                <span class="pill red"><i class="fa-solid fa-gauge-high"></i> 93× Speedup</span>
+                <!-- <span class="pill red"><i class="fa-solid fa-gauge-high"></i> 93× Speedup</span> -->
             </div>
         </div>
     </div>
@@ -809,50 +810,50 @@ strong { color: var(--text); font-weight: 600; }
                         <td>S2 comm. independent of L</td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
-                        <td class="tick">✓</td>
+                       <td style="color:var(--tick)">✓</td>
                     </tr>
                     <tr>
                         <td>No trusted setup</td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
-                        <td class="tick">✓</td>
+                       <td style="color:var(--tick)">✓</td>
                     </tr>
                     <tr>
                         <td>Post-quantum (LWE / SIS only)</td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
-                        <td class="tick">✓</td>
+                       <td style="color:var(--tick)">✓</td>
                     </tr>
                     <tr>
                         <td>Malicious server security</td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
                         <td style="color:var(--amber)">✓ MP</td>
                         <td style="color:var(--amber)">✓ MP</td>
-                        <td class="tick">✓ IA</td>
+                        <td style="color:var(--tick)">✓ IA</td>
                     </tr>
                     <tr>
                         <td>Identifiable Abort</td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
                         <td><span class="cross">✗</span></td><td><span class="cross">✗</span></td>
-                        <td class="tick">✓</td>
+                       <td style="color:var(--tick)">✓</td>
                     </tr>
                     <tr>
                         <td>Input validation / malicious clients</td>
-                        <td class="tick">✓</td><td class="tick">✓</td>
-                        <td class="tick">✓</td><td class="tick">✓</td>
-                        <td class="tick">✓</td>
+                       <td style="color:var(--tick)">✓</td><td style="color:var(--tick)">✓</td>
+                       <td style="color:var(--tick)">✓</td><td style="color:var(--tick)">✓</td>
+                       <td style="color:var(--tick)">✓</td>
                     </tr>
                     <tr>
                         <td>Arbitrary integer inputs</td>
-                        <td class="tick">✓</td><td class="tick">✓</td>
-                        <td class="tick">✓</td><td><span class="cross">✗</span></td>
-                        <td class="tick">✓</td>
+                       <td style="color:var(--tick)">✓</td><td style="color:var(--tick)">✓</td>
+                       <td style="color:var(--tick)">✓</td><td><span class="cross">✗</span></td>
+                       <td style="color:var(--tick)">✓</td>
                     </tr>
-                    <tr class="tapas-row">
+                    <!-- <tr class="tapas-row">
                         <td><strong>93× speedup over Prio (L = 2<sup>18</sup>)</strong></td>
                         <td>—</td><td>—</td><td>—</td><td>—</td>
-                        <td class="tick">✓</td>
-                    </tr>
+                       <td style="color:var(--tick)">✓</td>
+                    </tr> -->
                 </tbody>
             </table>
             <p style="font-size:13px;color:var(--muted);margin-top:12px;font-style:italic;">
