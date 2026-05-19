@@ -643,6 +643,7 @@ strong { color: var(--text); font-weight: 600; }
 }
 .step-hint.hidden { opacity: 0; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <div id="stage">
@@ -1390,70 +1391,100 @@ strong { color: var(--text); font-weight: 600; }
     <!-- ══════════════════════════════════════════════════════════════════ -->
     <!-- SLIDE 14 — THANK YOU                                              -->
     <!-- ══════════════════════════════════════════════════════════════════ -->
-    <div class="slide" id="s13">
+       <div class="slide" id="s13">
         <div class="left-band" style="background:linear-gradient(180deg,var(--green),var(--violet));"></div>
-        <div style="position:absolute;left:72px;top:50%;transform:translateY(-50%);max-width:860px;">
+ 
+        <!-- Main content — narrowed to leave room for QR panel -->
+        <div style="position:absolute;left:72px;top:50%;transform:translateY(-50%);max-width:650px;">
             <div class="kicker">JPMorgan AI Research · AlgoCRYPT CoE</div>
-            <h1 style="font-family:'Sora',sans-serif;font-size:58px;font-weight:800;letter-spacing:-.04em;color:var(--text);margin-bottom:12px;line-height:1.05;">
+            <h1 style="font-family:'Sora',sans-serif;font-size:50px;font-weight:800;letter-spacing:-.04em;color:var(--text);margin-bottom:10px;line-height:1.05;">
                 Thank You
             </h1>
-            <p style="font-size:18px;color:var(--green);margin-bottom:32px;">TAPAS: Efficient Two-Server Asymmetric Private Aggregation</p>
-
-            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px;">
-                <div class="card" style="padding:12px 20px;display:inline-block;">
-                    <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--muted2);">harish.karthikeyan@jpmchase.com</div>
+            <p style="font-size:16px;color:var(--green);margin-bottom:22px;">TAPAS: Efficient Two-Server Asymmetric Private Aggregation</p>
+ 
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;">
+                <div class="card" style="padding:10px 16px;display:inline-block;">
+                    <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted2);">harish.karthikeyan@jpmchase.com</div>
                 </div>
-                <div class="card" style="padding:12px 20px;display:inline-block;">
-                    <div style="font-family:'DM Mono',monospace;font-size:14px;color:var(--muted2);">antigoni.polychroniadou@jpmorgan.com</div>
+                <div class="card" style="padding:10px 16px;display:inline-block;">
+                    <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--muted2);">antigoni.polychroniadou@jpmorgan.com</div>
                 </div>
             </div>
-
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-width:760px;">
-                <div style="display:flex;gap:10px;align-items:flex-start;">
+ 
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;max-width:650px;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span class="step-badge" style="background:var(--violet-lo);color:var(--violet);">✓</span>
-                    <p style="font-size:15px;color:var(--muted2);">S2 costs O(nλ) in comm. and compute — independent of L.</p>
+                    <p style="font-size:13px;color:var(--muted2);">S2 costs O(nλ) in comm. and compute — independent of L. </p>
                 </div>
-                <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span class="step-badge" style="background:var(--green-lo);color:var(--green);">✓</span>
-                    <p style="font-size:15px;color:var(--muted2);">First two-server protocol with pure post-quantum security (LWE + SIS only)</p>
+                    <p style="font-size:13px;color:var(--muted2);">First two-server protocol with pure post-quantum security (LWE + SIS only)</p>
                 </div>
-                <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span class="step-badge" style="background:var(--violet-lo);color:var(--violet);">✓</span>
-                    <p style="font-size:15px;color:var(--muted2);">Block-wise ZK proofs: slack √d instead of √L; independent restarts keep runtime O(k·M)</p>
+                    <p style="font-size:13px;color:var(--muted2);">Block-wise ZK proofs: slack √d instead of √L; independent restarts keep runtime O(k·M)</p>
                 </div>
-                <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span class="step-badge" style="background:var(--green-lo);color:var(--green);">✓</span>
-                    <p style="font-size:15px;color:var(--muted2);">Identifiable Abort: any misbehaving party (client or server) is cryptographically identified</p>
+                    <p style="font-size:13px;color:var(--muted2);">Identifiable Abort: any misbehaving party (client or server) is cryptographically identified</p>
                 </div>
-                <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span class="step-badge" style="background:var(--violet-lo);color:var(--violet);">✓</span>
-                    <p style="font-size:15px;color:var(--muted2);">93× faster than Prio, 17.5× than Elsa (client, L=2<sup>18</sup>). End-to-end 6.9× faster at n=1000.</p>
+                    <p style="font-size:13px;color:var(--muted2);">93× faster than Prio, 17.5× than Elsa (client, L=2<sup>18</sup>). End-to-end 6.9× faster at n=1000.</p>
                 </div>
-                <div style="display:flex;gap:10px;align-items:flex-start;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
                     <span class="step-badge" style="background:var(--green-lo);color:var(--green);">✓</span>
-                    <p style="font-size:15px;color:var(--muted2);">352× less inter-server traffic than Elsa at L=2<sup>18</sup> — kilobytes instead of terabytes per round</p>
+                    <p style="font-size:13px;color:var(--muted2);">352× less inter-server traffic than Elsa at L=2<sup>18</sup> — kilobytes instead of terabytes per round</p>
+                </div>
+            </div>
+        </div>
+ 
+        <!-- QR panel — pinned to right -->
+        <div style="position:absolute;right:44px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:14px;width:296px;">
+ 
+            <!-- Workshop invite banner -->
+            <div style="background:linear-gradient(135deg,rgba(124,111,247,.14),rgba(28,214,160,.08));border:1px solid rgba(124,111,247,.3);border-radius:12px;padding:12px 16px;text-align:center;width:100%;">
+                <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--violet);margin-bottom:5px;">8th Edition · CRYPTO 2026</div>
+                <div style="font-family:'Sora',sans-serif;font-size:15px;font-weight:700;color:var(--text);line-height:1.25;margin-bottom:4px;">Privacy-Preserving<br>Machine Learning</div>
+                <div style="font-size:12px;color:var(--muted2);">Affiliated Event &nbsp;·&nbsp; Submissions Open</div>
+            </div>
+ 
+            <!-- Two QR codes -->
+            <div style="display:flex;gap:14px;align-items:flex-start;justify-content:center;">
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                    <div style="background:#fff;border-radius:8px;padding:6px;line-height:0;">
+                        <div id="qr-submit" style="width:110px;height:110px;"></div>
+                    </div>
+                    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;line-height:1.4;">Submit<br>EasyChair</div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                    <div style="background:#fff;border-radius:8px;padding:6px;line-height:0;">
+                        <div id="qr-website" style="width:110px;height:110px;"></div>
+                    </div>
+                    <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;line-height:1.4;">Workshop<br>Website</div>
                 </div>
             </div>
         </div>
     </div>
-
+    
 </div><!-- /#stage -->
 
+ 
 <script>
 // ── SLIDE STATE ──────────────────────────────────────────────────────────────
 const slides   = [...document.querySelectorAll('.slide')];
 const total    = slides.length;
 let   cur      = 0;   // current slide index
 let   stepCur  = 0;   // steps revealed on current slide (0 = none)
-
+ 
 document.getElementById('tot').textContent = total;
-
+ 
 // ── HELPERS ──────────────────────────────────────────────────────────────────
 function slideSteps(idx) {
     // How many data-step elements does this slide have?
     return parseInt(slides[idx].dataset.steps || '0', 10);
 }
-
+ 
 function applySteps(idx, n) {
     // Show all [data-step] elements whose step number <= n
     slides[idx].querySelectorAll('[data-step]').forEach(el => {
@@ -1462,7 +1493,7 @@ function applySteps(idx, n) {
     });
     updateDots(idx, n);
 }
-
+ 
 function buildDots(idx) {
     // Remove old dots
     const old = slides[idx].querySelector('.sdots');
@@ -1479,14 +1510,14 @@ function buildDots(idx) {
         wrap.appendChild(d);
     }
     slides[idx].appendChild(wrap);
-
+ 
     // hint label
     const hint = document.createElement('div');
     hint.className = 'step-hint';
     hint.textContent = '→ click to reveal';
     slides[idx].appendChild(hint);
 }
-
+ 
 function updateDots(idx, n) {
     const total_steps = slideSteps(idx);
     if (total_steps === 0) return;
@@ -1498,18 +1529,18 @@ function updateDots(idx, n) {
     const hint = slides[idx].querySelector('.step-hint');
     if (hint) hint.classList.toggle('hidden', n >= 1);
 }
-
+ 
 // ── SLIDE 9 ANIMATION CONTROL ────────────────────────────────────────────────
 // slide 9 is index 8 (0-based). Packets dp1/dp2 auto-play; dp3/d-ok wait for step 2.
 const S9_IDX = [...document.querySelectorAll('.slide')].findIndex(s => s.id === 'slide-9');
-
+ 
 function restartAnimation(el) {
     el.style.animation = 'none';
     el.offsetHeight; // reflow
     el.style.animation = '';
     el.style.animationPlayState = 'running';
 }
-
+ 
 function initSlide9() {
     // Restart auto-play packets
     ['dp1','dp2'].forEach(id => restartAnimation(document.getElementById(id)));
@@ -1525,7 +1556,7 @@ function initSlide9() {
     const ph = document.getElementById('dig-phase');
     if (ph) ph.textContent = 'Phase 1 — Client upload';
 }
-
+ 
 function triggerSlide9Step(step) {
     const ph = document.getElementById('dig-phase');
     if (step === 1 && ph) ph.textContent = 'Phase 1 complete — S2 computes digest…';
@@ -1551,7 +1582,7 @@ function triggerSlide9Step(step) {
     }
     if (step === 3 && ph) ph.textContent = 'Complete — client admitted to aggregation';
 }
-
+ 
 // ── RENDER ───────────────────────────────────────────────────────────────────
 function render() {
     slides.forEach((s, i) => s.classList.toggle('active', i === cur));
@@ -1561,7 +1592,7 @@ function render() {
     // Restart slide 9 animations when entering that slide
     if (cur === S9_IDX) initSlide9();
 }
-
+ 
 // ── NAVIGATION ───────────────────────────────────────────────────────────────
 function advance() {
     // If current slide has un-revealed steps, reveal next step
@@ -1579,7 +1610,7 @@ function advance() {
         render();
     }
 }
-
+ 
 function retreat() {
     // If steps are partially revealed, collapse them all
     if (stepCur > 0) {
@@ -1594,20 +1625,20 @@ function retreat() {
         render();
     }
 }
-
+ 
 // ── INIT ─────────────────────────────────────────────────────────────────────
 slides.forEach((_, i) => buildDots(i));
 render();
-
+ 
 // ── INPUT BINDINGS ───────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
     if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); advance(); }
     if (e.key === 'ArrowLeft')                   { e.preventDefault(); retreat(); }
 });
-
+ 
 // Nav buttons already call go(±1) — rewire them
 window.go = d => (d > 0 ? advance() : retreat());
-
+ 
 // Touch/swipe
 let tx = 0;
 document.getElementById('stage').addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
@@ -1615,10 +1646,25 @@ document.getElementById('stage').addEventListener('touchend',   e => {
     const dx = e.changedTouches[0].clientX - tx;
     if (Math.abs(dx) > 40) (dx < 0 ? advance() : retreat());
 }, { passive: true });
-
+ 
 // Click anywhere on stage (outside nav buttons) also advances
 document.getElementById('stage').addEventListener('click', e => {
     if (!e.target.closest('#nav')) advance();
+});
+</script>
+<script>
+// Generate QR codes for the thank-you slide
+new QRCode(document.getElementById('qr-submit'), {
+    text: 'https://easychair.org/my/conference?conf=cryptoppml2026',
+    width: 110, height: 110,
+    colorDark: '#000000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+});
+new QRCode(document.getElementById('qr-website'), {
+    text: 'https://crypto-ppml.github.io/2026/',
+    width: 110, height: 110,
+    colorDark: '#000000', colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
 });
 </script>
 </body>
