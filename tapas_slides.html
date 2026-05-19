@@ -696,7 +696,7 @@ strong { color: var(--text); font-weight: 600; }
     <!-- ══════════════════════════════════════════════════════════════════ -->
     <!-- SLIDE 2 — THE PROBLEM                                             -->
     <!-- ══════════════════════════════════════════════════════════════════ -->
-    <div class="slide">
+    <div class="slide" data-steps="2">
         <div class="slide-tag">Motivation</div>
         <div class="slide-title">The <span>Symmetric Bottleneck</span></div>
         <div class="content" style="justify-content:flex-start;gap:16px;">
@@ -713,7 +713,7 @@ strong { color: var(--text); font-weight: 600; }
                         <li style="font-size:15px;color:var(--muted2);margin-top:5px">Server-side comm. scales with L, not client count n</li>
                     </ul>
                 </div>
-                <div class="card green">
+                <div class="card green" data-step="1" data-anim="right">
                     <div class="card-label green">TAPAS — Our Approach</div>
                     <h3>Intentional Asymmetry</h3>
                     <p>One server bears the full <strong>O(L)</strong> aggregation load; the other is a lightweight facilitator whose cost is <strong>independent of L</strong> and scales only with the number of clients n.</p>
@@ -726,7 +726,7 @@ strong { color: var(--text); font-weight: 600; }
                 </div>
             </div>
 
-            <div class="hl-strip" style="margin-top:4px;">
+            <div class="hl-strip" style="margin-top:4px;" data-step="2" data-anim="scale">
                 <div style="display:flex;gap:32px;justify-content:center;align-items:center;">
                     <div class="stat"><div class="stat-num">93×</div><div class="stat-label">speedup vs Prio</div></div>
                     <div style="width:1px;height:50px;background:var(--border2);"></div>
