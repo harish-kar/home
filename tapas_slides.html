@@ -651,6 +651,7 @@ strong { color: var(--text); font-weight: 600; }
     <!-- ── CHROME ──────────────────────────────────────────────────────── -->
     <div id="logo">
         <img src="https://companieslogo.com/img/orig/JPM_BIG.D-62c873ed.png?t=1720244492" alt="JPMC">
+        <img src="algo.png" width="100px" height="100px" alt="AlgoCRYPT CoE">
     </div>
     <div id="counter"><span id="cur">1</span> / <span id="tot">13</span></div>
     <div id="progress"></div>
@@ -688,34 +689,127 @@ strong { color: var(--text); font-weight: 600; }
     <div class="slide" data-steps="2">
         <div class="slide-tag">Motivation</div>
         <div class="slide-title">The <span>Symmetric Bottleneck</span></div>
-        <div class="content" style="justify-content:flex-start;gap:16px;">
-            <div class="cols-2">
-                <div class="card red">
-                    <div class="card-label red">Prior Work — Prio · Prio+ · Elsa</div>
-                    <h3>Prio is the bedrock of several practical deployments (Mozilla, Apple/Google/ISRG)</h3>
-                    <h3>Incurs symmetric cost on Both Servers</h3>
-                    <p>Both servers must process <strong>O(L)</strong> data, where L is the model dimension. In modern deep learning L ≈ 10<sup>7</sup> parameters, making the secondary server prohibitively expensive to operate.</p>
-                    <div class="rule"></div>
-                    <ul style="padding-left:16px;">
-                        <!-- <li style="font-size:15px;color:var(--muted2)">No post-quantum security (DL / non-standard assumptions)</li> -->
-                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">Abort is indistinguishable from client misbehaviour</li>
-                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">Server-side comm. scales with L, not client count n</li>
-                    </ul>
+        <div class="content" style="justify-content:flex-start;gap:14px;">
+
+            <!-- Visual comparison row -->
+            <div style="display:grid;grid-template-columns:1fr 48px 1fr;gap:0;flex:1;align-items:stretch;min-height:0;">
+
+                <!-- LEFT — Prior Work -->
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red);opacity:.9;">Prior Work — Prio · Elsa · Heli</div>
+
+                    <!-- Server diagram: both servers equally heavy -->
+                    <div style="display:flex;gap:10px;align-items:flex-end;height:120px;">
+                        <!-- Clients column -->
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;">
+                            <div style="width:38px;flex:1;background:rgba(107,115,148,.25);border:1px solid var(--border2);border-radius:5px 5px 0 0;display:flex;align-items:center;justify-content:center;">
+                                <i class="fa-solid fa-users" style="font-size:13px;color:var(--muted);"></i>
+                            </div>
+                            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;">Clients</div>
+                        </div>
+                        <!-- Arrow -->
+                        <div style="color:var(--border2);font-size:18px;margin-bottom:22px;">→</div>
+                        <!-- S1 bar — tall (O(L)) -->
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+                            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--red);opacity:.8;">O(nL)</div>
+                            <div style="width:100%;flex:1;background:rgba(240,86,106,.18);border:1px solid rgba(240,86,106,.4);border-radius:5px 5px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+                                <i class="fa-solid fa-server" style="font-size:16px;color:var(--red);opacity:.7;"></i>
+                                <span style="font-size:11px;color:var(--muted);">Server 1</span>
+                            </div>
+                        </div>
+                        <!-- Arrow -->
+                        <div style="color:var(--border2);font-size:18px;margin-bottom:22px;">↔</div>
+                        <!-- S2 bar — same height as S1 (symmetric) -->
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+                            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--red);opacity:.8;">O(nL)</div>
+                            <div style="width:100%;flex:1;background:rgba(240,86,106,.18);border:1px solid rgba(240,86,106,.4);border-radius:5px 5px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+                                <i class="fa-solid fa-server" style="font-size:16px;color:var(--red);opacity:.7;"></i>
+                                <span style="font-size:11px;color:var(--muted);">Server 2</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Three pain-point chips -->
+                    <div style="display:flex;flex-direction:column;gap:7px;">
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(240,86,106,.07);border:1px solid rgba(240,86,106,.2);border-radius:8px;padding:8px 12px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);font-size:14px;flex-shrink:0;"></i>
+                            <span style="font-size:14px;color:var(--muted2);">Both servers receive <strong style="color:var(--text);">O(nL)</strong> data — doubles deployment cost</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(240,86,106,.07);border:1px solid rgba(240,86,106,.2);border-radius:8px;padding:8px 12px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);font-size:14px;flex-shrink:0;"></i>
+                            <span style="font-size:14px;color:var(--muted2);">Abort is <strong style="color:var(--text);">anonymous</strong> — cannot identify the guilty party</span>
+                        </div>
+                        <!-- <div style="display:flex;align-items:center;gap:10px;background:rgba(240,86,106,.07);border:1px solid rgba(240,86,106,.2);border-radius:8px;padding:8px 12px;">
+                            <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);font-size:14px;flex-shrink:0;"></i>
+                            <span style="font-size:14px;color:var(--muted2);">No <strong style="color:var(--text);">post-quantum</strong> security — built on DL assumptions</span>
+                        </div> -->
+                    </div>
                 </div>
-                <div class="card green" data-step="1" data-anim="right">
-                    <div class="card-label green">TAPAS — Our Approach</div>
-                    <h3>Intentional Asymmetry</h3>
-                    <p>One server bears the full <strong>O(L)</strong> aggregation load; the other is a lightweight facilitator whose cost is <strong>independent of L</strong> and scales only with the number of clients n.</p>
-                    <div class="rule"></div>
-                    <ul style="padding-left:16px;">
-                        <li style="font-size:15px;color:var(--muted2)">Post-quantum: LWE + SIS only</li>
-                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">Identifiable Abort: faults are cryptographically attributed</li>
-                        <li style="font-size:15px;color:var(--muted2);margin-top:5px">No trusted setup or preprocessing</li>
-                    </ul>
+
+                <!-- CENTRE divider arrow -->
+                <div style="display:flex;align-items:center;justify-content:center;">
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+                        <div style="width:1px;flex:1;background:var(--border);"></div>
+                        <div style="background:var(--surface2);border:1px solid var(--border2);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--violet);">→</div>
+                        <div style="width:1px;flex:1;background:var(--border);"></div>
+                    </div>
+                </div>
+
+                <!-- RIGHT — TAPAS -->
+                <div style="display:flex;flex-direction:column;gap:10px;" data-step="1" data-anim="right">
+                    <div style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--green);opacity:.9;">TAPAS — Intentional Asymmetry</div>
+
+                    <!-- Server diagram: S2 is tiny -->
+                    <div style="display:flex;gap:10px;align-items:flex-end;height:120px;">
+                        <!-- Clients column -->
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto;">
+                            <div style="width:38px;flex:1;background:rgba(107,115,148,.25);border:1px solid var(--border2);border-radius:5px 5px 0 0;display:flex;align-items:center;justify-content:center;">
+                                <i class="fa-solid fa-users" style="font-size:13px;color:var(--muted);"></i>
+                            </div>
+                            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;">Clients</div>
+                        </div>
+                        <!-- Arrow -->
+                        <div style="color:var(--border2);font-size:18px;margin-bottom:22px;">→</div>
+                        <!-- S1 bar — tall (O(L), same as before) -->
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+                            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--violet);opacity:.8;">O(nL)</div>
+                            <div style="width:100%;flex:1;background:rgba(124,111,247,.15);border:1px solid rgba(124,111,247,.4);border-radius:5px 5px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;">
+                                <i class="fa-solid fa-server" style="font-size:16px;color:var(--violet);opacity:.8;"></i>
+                                <span style="font-size:11px;color:var(--muted);">Server 1</span>
+                            </div>
+                        </div>
+                        <!-- Arrow -->
+                        <div style="color:var(--border2);font-size:18px;margin-bottom:22px;">↔</div>
+                        <!-- S2 bar — SHORT (O(nλ), independent of L) -->
+                        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:1;">
+                            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--green);opacity:.9;">O(nλ)</div>
+                            <div style="width:100%;height:32px;background:rgba(28,214,160,.15);border:1px solid rgba(28,214,160,.45);border-radius:5px 5px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;">
+                                <i class="fa-solid fa-server" style="font-size:11px;color:var(--green);opacity:.9;"></i>
+                                <span style="font-size:10px;color:var(--muted);">Server 2</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Three benefit chips -->
+                    <div style="display:flex;flex-direction:column;gap:7px;">
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(28,214,160,.07);border:1px solid rgba(28,214,160,.2);border-radius:8px;padding:8px 12px;">
+                            <i class="fa-solid fa-check" style="color:var(--green);font-size:14px;flex-shrink:0;"></i>
+                            <span style="font-size:14px;color:var(--muted2);">S2 receives only <strong style="color:var(--text);">O(nλ)</strong> seeds — runs on a laptop</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;background:rgba(28,214,160,.07);border:1px solid rgba(28,214,160,.2);border-radius:8px;padding:8px 12px;">
+                            <i class="fa-solid fa-check" style="color:var(--green);font-size:14px;flex-shrink:0;"></i>
+                            <span style="font-size:14px;color:var(--muted2);"><strong style="color:var(--text);">Identifiable Abort</strong> — misbehaving party is named, not just detected</span>
+                        </div>
+                        <!-- <div style="display:flex;align-items:center;gap:10px;background:rgba(28,214,160,.07);border:1px solid rgba(28,214,160,.2);border-radius:8px;padding:8px 12px;">
+                            <i class="fa-solid fa-check" style="color:var(--green);font-size:14px;flex-shrink:0;"></i>
+                            <span style="font-size:14px;color:var(--muted2);"><strong style="color:var(--text);">Post-quantum</strong> — LWE + SIS only, no trusted setup</span>
+                        </div> -->
+                    </div>
                 </div>
             </div>
 
-            <div class="hl-strip" style="margin-top:4px;" data-step="2" data-anim="scale">
+            <!-- Stats strip — step 2 -->
+            <div class="hl-strip" style="margin-top:0;" data-step="2" data-anim="scale">
                 <div style="display:flex;gap:32px;justify-content:center;align-items:center;">
                     <div class="stat"><div class="stat-num">93×</div><div class="stat-label">speedup vs Prio</div></div>
                     <div style="width:1px;height:50px;background:var(--border2);"></div>
