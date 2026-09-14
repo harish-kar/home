@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="8" fill="#0b0c0e"/>
+  <rect x="3" y="3" width="58" height="58" rx="6" fill="none" stroke="#6ee7c4" stroke-opacity="0.35" stroke-width="2"/>
+  <text x="32" y="42" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" fill="#6ee7c4">HK</text>
+</svg>

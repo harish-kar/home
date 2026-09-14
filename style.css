@@ -8,7 +8,7 @@
   --accent: #6ee7c4;
   --accent2: #a78bfa;
   --text: #e8e6df;
-  --muted: #7a7d8a;
+  --muted: #9296a3;
   --mono: 'DM Mono', monospace;
   --serif: 'Cormorant Garamond', serif;
   --sans: 'Syne', sans-serif;
@@ -229,6 +229,25 @@ footer {
 }
 
 @media (max-width: 600px) {
-  .nav-links { gap: 0.85rem; }
+  nav { flex-wrap: wrap; gap: 0.6rem; padding: 0.85rem 1rem; }
+  .nav-links { gap: 0.85rem; flex-wrap: wrap; }
   .nav-links a { font-size: 0.62rem; }
+  .page-header { padding-top: 7.5rem; }
+  .page-header, .section { padding-left: 1rem; padding-right: 1rem; }
 }
+
+html, body { max-width: 100%; }
+img { max-width: 100%; }
+.section * { min-width: 0; overflow-wrap: anywhere; }
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+  .fade-up, .hero-eyebrow, .hero h1, .hero-role, .hero-desc, .hero-cta, .hero-visual { opacity: 1 !important; }
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
